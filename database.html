@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>मञ्जला किराना पसल - रिपोर्ट तथा डाटाबेस</title>
+    <!-- html2canvas Library to generate bill images from database records -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -113,6 +115,60 @@
         .btn-secondary {
             background-color: #2980b9;
         }
+
+        /* Hidden Receipt Template used to generate image snapshots on-the-fly */
+        #hidden-receipt-container {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+        }
+        .receipt-template {
+            width: 500px;
+            background: #ffffff;
+            padding: 20px;
+            color: #333;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .receipt-header h2 { font-size: 20px; color: #2c3e50; margin-bottom: 4px; }
+        .receipt-header p { font-size: 12px; color: #555; }
+        .receipt-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+        .receipt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        .receipt-table, .receipt-table th, .receipt-table td {
+            border: 1px solid #333;
+        }
+        .receipt-table th, .receipt-table td {
+            padding: 6px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .receipt-table th { background-color: #eaecee; }
+        .receipt-totals {
+            float: right;
+            width: 60%;
+            font-size: 13px;
+        }
+        .receipt-total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-weight: bold;
+        }
+        .clearfix::after { content: ""; clear: both; display: table; }
     </style>
 </head>
 <body>
@@ -150,9 +206,13 @@
             </div>
         </div>
 
-        <!-- SECTION 2: ITEM & CUSTOMER SEARCH -->
+        <!-- SECTION 2: SEARCH OPTIONS -->
         <div class="card">
-            <h3>🔍 सामान वा ग्राहक खोज्नुहोस्</h3>
+            <h3>🔍 बिल, सामान वा ग्राहक खोज्नुहोस्</h3>
+            <div class="form-group">
+                <label>बिल नम्बर (Bill Number Search):</label>
+                <input type="text" id="search-billno" placeholder="जस्तै: 00001..." oninput="filterData()">
+            </div>
             <div class="form-group">
                 <label>सामानको नाम (Item Sales Search):</label>
                 <input type="text" id="search-item" placeholder="जस्तै: चिनी, चामल..." oninput="filterData()">
@@ -184,6 +244,9 @@
 
         <button class="btn btn-secondary" onclick="window.location.href='homepage.html'">⬅️ गृहपृष्ठमा फर्कनुहोस्</button>
     </div>
+
+    <!-- Hidden Container to render image snapshot -->
+    <div id="hidden-receipt-container"></div>
 
     <script>
         let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
@@ -230,12 +293,14 @@
         }
 
         function filterData() {
+            const billNoQuery = document.getElementById('search-billno').value.toLowerCase().trim();
             const itemQuery = document.getElementById('search-item').value.toLowerCase().trim();
             const customerQuery = document.getElementById('search-customer').value.toLowerCase().trim();
             const tbody = document.getElementById('database-rows');
             tbody.innerHTML = '';
 
             let filteredBills = billsDatabase.filter(bill => {
+                let matchesBillNo = (bill.billNo || '').toLowerCase().includes(billNoQuery);
                 let matchesCustomer = (bill.customerName || '').toLowerCase().includes(customerQuery);
                 let matchesItem = true;
 
@@ -243,7 +308,7 @@
                     matchesItem = bill.items.some(item => (item.desc || '').toLowerCase().includes(itemQuery));
                 }
 
-                return matchesCustomer && matchesItem;
+                return matchesBillNo && matchesCustomer && matchesItem;
             });
 
             if (filteredBills.length === 0) {
@@ -252,15 +317,17 @@
             }
 
             filteredBills.forEach((bill) => {
-                // Find original index in master database for deletion accuracy
                 const originalIndex = billsDatabase.indexOf(bill);
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${bill.billNo}</td>
+                    <td><b>${bill.billNo}</b></td>
                     <td>${bill.date}</td>
                     <td>${bill.customerName}</td>
                     <td>रु ${bill.grandTotal}</td>
-                    <td><button class="btn-danger" style="padding:3px 6px; font-size:11px; border:none; border-radius:3px; color:white; cursor:pointer;" onclick="deleteBill(${originalIndex})">मेटाउने</button></td>
+                    <td>
+                        <button class="btn" style="background-color: #2980b9; padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%;" onclick="generateReceiptImage('${bill.billNo}')">📸 फोटो</button>
+                        <button class="btn-danger" style="padding: 4px 6px; font-size: 11px; border:none; border-radius:3px; color:white; cursor:pointer; width: 100%;" onclick="deleteBill(${originalIndex})">मेटाउने</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -275,10 +342,80 @@
             }
         }
 
+        function generateReceiptImage(billNo) {
+            const bill = billsDatabase.find(b => b.billNo === billNo);
+            if (!bill) return;
+
+            const container = document.getElementById('hidden-receipt-container');
+            
+            let itemsHtml = '';
+            bill.items.forEach((item, i) => {
+                itemsHtml += `
+                    <tr>
+                        <td>${i+1}</td>
+                        <td style="text-align: left; padding-left: 6px;">${item.desc}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.rate}</td>
+                        <td>${item.amount}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="receipt-template" id="capture-receipt">
+                    <div class="receipt-header">
+                        <h2>मञ्जला किराना पसल</h2>
+                        <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
+                        <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
+                    </div>
+                    <div class="receipt-info">
+                        <div><b>बिल नं:</b> ${bill.billNo}</div>
+                        <div><b>मिति:</b> ${bill.date}</div>
+                    </div>
+                    <div style="font-size: 13px; margin-bottom: 8px;">
+                        <div><b>ग्राहकको नाम:</b> ${bill.customerName}</div>
+                        <div><b>ठेगाना:</b> ${bill.customerAddress}</div>
+                    </div>
+                    <table class="receipt-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 8%;">सि.नं.</th>
+                                <th style="width: 42%;">विवरण</th>
+                                <th style="width: 15%;">परिमाण</th>
+                                <th style="width: 15%;">दर</th>
+                                <th style="width: 20%;">रकम</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    <div class="clearfix">
+                        <div class="receipt-totals">
+                            <div class="receipt-total-row" style="border-top: 1px solid #333; padding-top: 4px;">
+                                <span>कुल जम्मा (Grand Total):</span>
+                                <span>रु ${bill.grandTotal}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            setTimeout(() => {
+                html2canvas(document.getElementById('capture-receipt'), { scale: 2 }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `bill_${bill.billNo}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg');
+                    link.click();
+                    container.innerHTML = '';
+                });
+            }, 200);
+        }
+
         // Initial load
         calculateTurnover();
         filterData();
     </script>
 </body>
-  </html>
-          
+    </html>
+    
