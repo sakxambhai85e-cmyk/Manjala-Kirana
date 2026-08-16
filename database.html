@@ -115,8 +115,12 @@
         .btn-secondary {
             background-color: #2980b9;
         }
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
 
-        /* Hidden Receipt Template used to generate image snapshots on-the-fly */
+        /* Hidden Receipt Template used to generate accurate image snapshots with Discount */
         #hidden-receipt-container {
             position: absolute;
             left: -9999px;
@@ -159,14 +163,16 @@
         .receipt-table th { background-color: #eaecee; }
         .receipt-totals {
             float: right;
-            width: 60%;
+            width: 65%;
             font-size: 13px;
+            margin-bottom: 10px;
         }
         .receipt-total-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
+            padding: 5px 0;
             font-weight: bold;
+            border-bottom: 1px solid #ddd;
         }
         .clearfix::after { content: ""; clear: both; display: table; }
     </style>
@@ -326,6 +332,7 @@
                     <td>रु ${bill.grandTotal}</td>
                     <td>
                         <button class="btn" style="background-color: #2980b9; padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%;" onclick="generateReceiptImage('${bill.billNo}')">📸 फोटो</button>
+                        <button class="btn btn-warning" style="padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%; border:none; border-radius:3px; cursor:pointer;" onclick="editBill(${originalIndex})">✏️ सम्पादन</button>
                         <button class="btn-danger" style="padding: 4px 6px; font-size: 11px; border:none; border-radius:3px; color:white; cursor:pointer; width: 100%;" onclick="deleteBill(${originalIndex})">मेटाउने</button>
                     </td>
                 `;
@@ -342,6 +349,17 @@
             }
         }
 
+        function editBill(index) {
+            const bill = billsDatabase[index];
+            localStorage.setItem('edit_bill_data', JSON.stringify(bill));
+            // Remove from current list temporarily so user can resave updated version smoothly
+            billsDatabase.splice(index, 1);
+            localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+            
+            alert('यो बिल सम्पादनको लागि गृहपृष्ठमा पठाइयो।');
+            window.location.href = 'homepage.html';
+        }
+
         function generateReceiptImage(billNo) {
             const bill = billsDatabase.find(b => b.billNo === billNo);
             if (!bill) return;
@@ -349,17 +367,23 @@
             const container = document.getElementById('hidden-receipt-container');
             
             let itemsHtml = '';
+            let subTotalCalc = 0;
             bill.items.forEach((item, i) => {
+                const amt = parseFloat(item.amount) || (parseFloat(item.qty || 0) * parseFloat(item.rate || 0));
+                subTotalCalc += amt;
                 itemsHtml += `
                     <tr>
                         <td>${i+1}</td>
                         <td style="text-align: left; padding-left: 6px;">${item.desc}</td>
                         <td>${item.qty}</td>
                         <td>${item.rate}</td>
-                        <td>${item.amount}</td>
+                        <td>${amt.toFixed(2)}</td>
                     </tr>
                 `;
             });
+
+            const subTotal = subTotalCalc.toFixed(2);
+            const discountVal = parseFloat(bill.discount || 0).toFixed(2);
 
             container.innerHTML = `
                 <div class="receipt-template" id="capture-receipt">
@@ -392,7 +416,15 @@
                     </table>
                     <div class="clearfix">
                         <div class="receipt-totals">
-                            <div class="receipt-total-row" style="border-top: 1px solid #333; padding-top: 4px;">
+                            <div class="receipt-total-row">
+                                <span>जम्मा (Total):</span>
+                                <span>रु ${subTotal}</span>
+                            </div>
+                            <div class="receipt-total-row">
+                                <span>छुट (Discount):</span>
+                                <span>रु ${discountVal}</span>
+                            </div>
+                            <div class="receipt-total-row" style="border-top: 2px solid #333; padding-top: 5px;">
                                 <span>कुल जम्मा (Grand Total):</span>
                                 <span>रु ${bill.grandTotal}</span>
                             </div>
