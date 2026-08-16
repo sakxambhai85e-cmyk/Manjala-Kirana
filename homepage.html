@@ -252,7 +252,7 @@
 
     <script>
         document.getElementById('bill-date').valueAsDate = new Date();
-        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];[span_0](start_span)[span_0](end_span)[span_1](start_span)[span_1](end_span)
         let billGenerated = false;
 
         const nextBillNum = String(billsDatabase.length + 1).padStart(5, '0');
@@ -291,35 +291,61 @@
         }
 
         function saveBill() {
-            const billNo = document.getElementById('display-bill-no').textContent;
-            const date = document.getElementById('bill-date').value;
-            const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
-            const customerAddress = document.getElementById('customer-address').value || '-';
-            const customerEmail = document.getElementById('customer-email').value || '';
-            const grandTotal = document.getElementById('grand-total').textContent;
+            try {
+                const billNo = document.getElementById('display-bill-no').textContent;
+                const date = document.getElementById('bill-date').value;
+                const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+                const customerAddress = document.getElementById('customer-address').value || '-';
+                const customerEmail = document.getElementById('customer-email').value || '';
+                const grandTotal = document.getElementById('grand-total').textContent;
 
-            const rows = document.querySelectorAll('#items-body tr');
-            let items = [];
-            rows.forEach(row => {
-                items.push({
-                    desc: row.querySelector('.item-desc').value || 'सामान',
-                    qty: row.querySelector('.item-qty').value || '0',
-                    rate: row.querySelector('.item-rate').value || '0',
-                    amount: row.querySelector('.item-amount').textContent || '0.00'
+                const rows = document.querySelectorAll('#items-body tr');
+                let items = [];
+                rows.forEach(row => {
+                    items.push({
+                        desc: row.querySelector('.item-desc').value || 'सामान',
+                        qty: row.querySelector('.item-qty').value || '0',
+                        rate: row.querySelector('.item-rate').value || '0',
+                        amount: row.querySelector('.item-amount').textContent || '0.00'
+                    });
                 });
-            });
 
-            const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
-            billsDatabase.push(billData);
-            localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+                const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
+                
+                // 1. Guaranteed Local Storage Save
+                let currentBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
+                currentBills.push(billData);
+                localStorage.setItem('karobar_bills', JSON.stringify(currentBills));[span_4](start_span)[span_4](end_span)[span_5](start_span)[span_5](end_span)
 
-            billGenerated = true;
-            document.getElementById('btn-img').removeAttribute('disabled');
-            document.getElementById('btn-whatsapp').removeAttribute('disabled');
-            document.getElementById('btn-email').removeAttribute('disabled');
-            document.getElementById('btn-save').setAttribute('disabled', 'true');
+                // 2. Automatically send to Google Sheets
+                const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzGs5KJV70vdpbpAO6qzxdHPtZAAyI_9Gs8KmLDmTHiflALdZ8A7Q7j_4q4vQ-shXya/exec";[span_6](start_span)[span_6](end_span)
+                
+                fetch(GOOGLE_SHEET_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(billData)
+                }).catch(error => {
+                    console.warn("Google Sheet sync failed, queued for later.", error);
+                    let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
+                    queue.push(billData);
+                    localStorage.setItem('offline_sync_queue', JSON.stringify(queue));
+                });
 
-            alert('बिल सफलतापूर्वक सेभ भयो!');
+                billGenerated = true;
+                document.getElementById('btn-img').removeAttribute('disabled');
+                document.getElementById('btn-whatsapp').removeAttribute('disabled');
+                document.getElementById('btn-email').removeAttribute('disabled');
+                document.getElementById('btn-save').setAttribute('disabled', 'true');
+
+                alert('बिल सफलतापूर्वक सेभ र Google Sheet मा पठाइयो!');
+
+            } catch (err) {
+                console.error("Error saving bill:", err);
+                alert('बिल सेभ गर्दा त्रुटि भयो: ' + err.message);
+            }
         }
 
         function downloadImage() {
@@ -394,5 +420,4 @@
         }
     </script>
 </body>
-    </html>
-    
+</html>
