@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>मञ्जला किराना पसल - रिपोर्ट तथा डाटाबेस</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60;
+            --danger-color: #c0392b;
+            --bg-color: #f4f6f7;
+            --white: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            padding: 10px;
+        }
+        .page {
+            max-width: 650px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .card {
+            background: #f9fbfb;
+            border: 1px solid #dcdde1;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table, th, td {
+            border: 1px solid #333;
+        }
+        th, td {
+            padding: 7px;
+            text-align: center;
+            font-size: 12px;
+        }
+        th {
+            background-color: #eaecee;
+        }
+        .database-table {
+            overflow-x: auto;
+        }
+        .summary-box {
+            background: #e8f8f5;
+            border: 1px solid #27ae60;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+        }
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        .btn-secondary {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
+
+        <!-- SECTION 1: TURNOVER REPORT BY RANGE / TIME -->
+        <div class="card">
+            <h3>📈 कारोबार (Turnover) रिपोर्ट</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>अवधि छान्नुहोस्:</label>
+                    <select id="filter-period" onchange="toggleDateInputs()">
+                        <option value="all">सबै (All Time)</option>
+                        <option value="weekly">यो हप्ता (This Week)</option>
+                        <option value="monthly">यो महिना (This Month)</option>
+                        <option value="yearly">यो वर्ष (This Year)</option>
+                        <option value="custom">तاريخ छान्नुहोस् (Custom Range)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="custom-date-box" class="row" style="display: none;">
+                <div class="form-group">
+                    <label>देखि (From):</label>
+                    <input type="date" id="date-from" onchange="calculateTurnover()">
+                </div>
+                <div class="form-group">
+                    <label>सम्म (To):</label>
+                    <input type="date" id="date-to" onchange="calculateTurnover()">
+                </div>
+            </div>
+            <div class="summary-box" id="turnover-display">
+                कुल कारोबार: रु 0.00
+            </div>
+        </div>
+
+        <!-- SECTION 2: ITEM & CUSTOMER SEARCH -->
+        <div class="card">
+            <h3>🔍 सामान वा ग्राहक खोज्नुहोस्</h3>
+            <div class="form-group">
+                <label>सामानको नाम (Item Sales Search):</label>
+                <input type="text" id="search-item" placeholder="जस्तै: चिनी, चामल..." oninput="filterData()">
+            </div>
+            <div class="form-group">
+                <label>ग्राहकको नाम (Customer Purchase History):</label>
+                <input type="text" id="search-customer" placeholder="ग्राहकको नाम..." oninput="filterData()">
+            </div>
+        </div>
+
+        <!-- SECTION 3: BILLS DATABASE TABLE -->
+        <h3>बिलहरूको सूची</h3>
+        <div class="database-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>बिल नं</th>
+                        <th>मिति</th>
+                        <th>ग्राहक</th>
+                        <th>कुल रकम</th>
+                        <th>कार्य</th>
+                    </tr>
+                </thead>
+                <tbody id="database-rows">
+                    <!-- Dynamic rows -->
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn btn-secondary" onclick="window.location.href='homepage.html'">⬅️ गृहपृष्ठमा फर्कनुहोस्</button>
+    </div>
+
+    <script>
+        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+
+        function toggleDateInputs() {
+            const period = document.getElementById('filter-period').value;
+            const customBox = document.getElementById('custom-date-box');
+            customBox.style.display = (period === 'custom') ? 'flex' : 'none';
+            calculateTurnover();
+            filterData();
+        }
+
+        function calculateTurnover() {
+            const period = document.getElementById('filter-period').value;
+            const now = new Date();
+            let total = 0;
+
+            billsDatabase.forEach(bill => {
+                const billDate = new Date(bill.date);
+                let include = false;
+
+                if (period === 'all') {
+                    include = true;
+                } else if (period === 'weekly') {
+                    const oneWeekAgo = new Date();
+                    oneWeekAgo.setDate(now.getDate() - 7);
+                    if (billDate >= oneWeekAgo && billDate <= now) include = true;
+                } else if (period === 'monthly') {
+                    if (billDate.getMonth() === now.getMonth() && billDate.getFullYear() === now.getFullYear()) include = true;
+                } else if (period === 'yearly') {
+                    if (billDate.getFullYear() === now.getFullYear()) include = true;
+                } else if (period === 'custom') {
+                    const from = document.getElementById('date-from').value;
+                    const to = document.getElementById('date-to').value;
+                    if (from && to && bill.date >= from && bill.date <= to) include = true;
+                }
+
+                if (include) {
+                    total += parseFloat(bill.grandTotal) || 0;
+                }
+            });
+
+            document.getElementById('turnover-display').textContent = `कुल कारोबार: रु ${total.toFixed(2)}`;
+        }
+
+        function filterData() {
+            const itemQuery = document.getElementById('search-item').value.toLowerCase().trim();
+            const customerQuery = document.getElementById('search-customer').value.toLowerCase().trim();
+            const tbody = document.getElementById('database-rows');
+            tbody.innerHTML = '';
+
+            let filteredBills = billsDatabase.filter(bill => {
+                let matchesCustomer = (bill.customerName || '').toLowerCase().includes(customerQuery);
+                let matchesItem = true;
+
+                if (itemQuery) {
+                    matchesItem = bill.items.some(item => (item.desc || '').toLowerCase().includes(itemQuery));
+                }
+
+                return matchesCustomer && matchesItem;
+            });
+
+            if (filteredBills.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5">कुनै पनि रेकर्ड फेला परेन।</td></tr>`;
+                return;
+            }
+
+            filteredBills.forEach((bill) => {
+                // Find original index in master database for deletion accuracy
+                const originalIndex = billsDatabase.indexOf(bill);
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${bill.billNo}</td>
+                    <td>${bill.date}</td>
+                    <td>${bill.customerName}</td>
+                    <td>रु ${bill.grandTotal}</td>
+                    <td><button class="btn-danger" style="padding:3px 6px; font-size:11px; border:none; border-radius:3px; color:white; cursor:pointer;" onclick="deleteBill(${originalIndex})">मेटाउने</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function deleteBill(index) {
+            if (confirm('के तपाईँ यो बिल मेटाउन चाहनुहुन्छ?')) {
+                billsDatabase.splice(index, 1);
+                localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+                calculateTurnover();
+                filterData();
+            }
+        }
+
+        // Initial load
+        calculateTurnover();
+        filterData();
+    </script>
+</body>
+  </html>
+          
