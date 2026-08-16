@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>मञ्जला किराना पसल - गृहपृष्ठ</title>
+    <!-- html2canvas Library to capture bill as Image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -144,6 +146,14 @@
             gap: 8px;
             margin-top: 15px;
         }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin-top: 6px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -189,9 +199,9 @@
                 <tr>
                     <td>1</td>
                     <td><input type="text" class="table-input item-desc" placeholder="सामानको नाम" style="text-align: left; padding-left: 6px;"></td>
-                    <td><input type="number" class="table-input item-qty" value="1" oninput="calculateTotals()"></td>
-                    <td><input type="number" class="table-input item-rate" value="0" oninput="calculateTotals()"></td>
-                    <td class="item-amount">0</td>
+                    <td><input type="number" class="table-input item-qty" placeholder="" oninput="calculateTotals()"></td>
+                    <td><input type="number" class="table-input item-rate" placeholder="" oninput="calculateTotals()"></td>
+                    <td class="item-amount">0.00</td>
                 </tr>
             </tbody>
         </table>
@@ -201,15 +211,15 @@
             <div class="totals-section">
                 <div class="total-row">
                     <span>जम्मा (Total):</span>
-                    <span id="sub-total">0</span>
+                    <span id="sub-total">0.00</span>
                 </div>
                 <div class="total-row">
                     <span>छुट (Discount):</span>
-                    <input type="number" id="discount" value="0" style="width: 90px; text-align: right; border:1px solid #ccc; padding:3px; border-radius:4px;" oninput="calculateTotals()">
+                    <input type="number" id="discount" placeholder="" style="width: 90px; text-align: right; border:1px solid #ccc; padding:3px; border-radius:4px;" oninput="calculateTotals()">
                 </div>
                 <div class="total-row" style="border-top: 2px solid #333; padding-top: 6px;">
                     <span>कुल जम्मा (Grand Total):</span>
-                    <span id="grand-total">0</span>
+                    <span id="grand-total">0.00</span>
                 </div>
             </div>
         </div>
@@ -219,8 +229,14 @@
     <div class="page" style="margin-top: 15px; background: transparent; box-shadow: none; padding: 0;">
         <div class="actions-bar">
             <button class="btn" id="btn-save" onclick="saveBill()">💾 सेभ र बिल बनाउनुहोस्</button>
-            <button class="btn btn-whatsapp" id="btn-whatsapp" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा बिल पठाउनुहोस्</button>
-            <button class="btn btn-email" id="btn-email" onclick="sendEmail()" disabled>📧 इमेलमा बिल पठाउनुहोस्</button>
+            <button class="btn btn-secondary" id="btn-img" onclick="downloadImage()" disabled>📥 बिलको फोटो डाउनलोड गर्नुहोस्</button>
+            
+            <label class="checkbox-container">
+                <input type="checkbox" id="download-with-share" checked> सेयर गर्दा फोटो पनि डाउनलोड गर्ने (Download Image on Share)
+            </label>
+
+            <button class="btn btn-whatsapp" id="btn-whatsapp" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा टेक्स्ट बिल पठाउनुहोस्</button>
+            <button class="btn btn-email" id="btn-email" onclick="sendEmail()" disabled>📧 इमेलमा टेक्स्ट बिल पठाउनुहोस्</button>
             <button class="btn btn-secondary" onclick="window.location.href='database.html'">📊 डाटाबेस हेर्नुहोस्</button>
             <button class="btn btn-danger" onclick="window.location.href='index.html'">लगआउट गर्नुहोस्</button>
         </div>
@@ -241,9 +257,9 @@
             tr.innerHTML = `
                 <td>${rowCount}</td>
                 <td><input type="text" class="table-input item-desc" placeholder="सामानको नाम" style="text-align: left; padding-left: 6px;"></td>
-                <td><input type="number" class="table-input item-qty" value="1" oninput="calculateTotals()"></td>
-                <td><input type="number" class="table-input item-rate" value="0" oninput="calculateTotals()"></td>
-                <td class="item-amount">0</td>
+                <td><input type="number" class="table-input item-qty" placeholder="" oninput="calculateTotals()"></td>
+                <td><input type="number" class="table-input item-rate" placeholder="" oninput="calculateTotals()"></td>
+                <td class="item-amount">0.00</td>
             `;
             tbody.appendChild(tr);
         }
@@ -279,9 +295,9 @@
             rows.forEach(row => {
                 items.push({
                     desc: row.querySelector('.item-desc').value || 'सामान',
-                    qty: row.querySelector('.item-qty').value || '1',
+                    qty: row.querySelector('.item-qty').value || '0',
                     rate: row.querySelector('.item-rate').value || '0',
-                    amount: row.querySelector('.item-amount').textContent || '0'
+                    amount: row.querySelector('.item-amount').textContent || '0.00'
                 });
             });
 
@@ -290,11 +306,23 @@
             localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
 
             billGenerated = true;
+            document.getElementById('btn-img').removeAttribute('disabled');
             document.getElementById('btn-whatsapp').removeAttribute('disabled');
             document.getElementById('btn-email').removeAttribute('disabled');
             document.getElementById('btn-save').setAttribute('disabled', 'true');
 
             alert('बिल सफलतापूर्वक सेभ भयो!');
+        }
+
+        function downloadImage() {
+            if (!billGenerated) return;
+            const receipt = document.getElementById('bill-receipt');
+            html2canvas(receipt, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg');
+                link.click();
+            });
         }
 
         function generateBillText() {
@@ -319,9 +347,9 @@
 
             document.querySelectorAll('#items-body tr').forEach((row, i) => {
                 const desc = row.querySelector('.item-desc').value || 'सामान';
-                const qty = row.querySelector('.item-qty').value || '1';
+                const qty = row.querySelector('.item-qty').value || '0';
                 const rate = row.querySelector('.item-rate').value || '0';
-                const amt = row.querySelector('.item-amount').textContent || '0';
+                const amt = row.querySelector('.item-amount').textContent || '0.00';
                 text += `${i+1}. ${desc} | ${qty} x ${rate} = रु ${amt}\n`;
             });
 
@@ -337,12 +365,18 @@
 
         function shareWhatsApp() {
             if (!billGenerated) return;
+            if (document.getElementById('download-with-share').checked) {
+                downloadImage();
+            }
             const text = encodeURIComponent(generateBillText());
             window.open(`https://wa.me/?text=${text}`, '_blank');
         }
 
         function sendEmail() {
             if (!billGenerated) return;
+            if (document.getElementById('download-with-share').checked) {
+                downloadImage();
+            }
             const email = document.getElementById('customer-email').value;
             const billNo = document.getElementById('display-bill-no').textContent;
             const subject = encodeURIComponent(`मञ्जला किराना पसल - बिल नं ${billNo}`);
@@ -352,4 +386,3 @@
     </script>
 </body>
 </html>
-
