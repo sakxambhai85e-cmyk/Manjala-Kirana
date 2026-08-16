@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>मञ्जला किराना पसल - गृहपृष्ठ</title>
+    <!-- jsPDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60;
+            --danger-color: #c0392b;
+            --bg-color: #f4f6f7;
+            --white: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            padding: 10px;
+        }
+        .page {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header-box {
+            text-align: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .header-box h1 {
+            font-size: 22px;
+            color: var(--primary-color);
+        }
+        .header-box p {
+            font-size: 13px;
+            color: #555;
+        }
+        .bill-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table, th, td {
+            border: 1px solid #333;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+        }
+        th {
+            background-color: #eaecee;
+        }
+        .totals-section {
+            float: right;
+            width: 60%;
+            margin-bottom: 20px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
+        }
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        .btn-secondary {
+            background-color: #2980b9;
+        }
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .actions-bar button {
+            flex: 1;
+            min-width: 45%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page">
+        <div class="header-box">
+            <h1>मञ्जला किराना पसल</h1>
+            <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
+            <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
+        </div>
+
+        <div class="bill-info">
+            <div><label>बिल नं: <span id="display-bill-no">101</span></label></div>
+            <div><label>मिति: <input type="date" id="bill-date" style="padding: 2px; font-size: 12px;"></label></div>
+        </div>
+
+        <div class="form-group">
+            <label>ग्राहकको नाम:</label>
+            <input type="text" id="customer-name" placeholder="ग्राहकको नाम लेख्नुहोस्">
+        </div>
+        <div class="form-group">
+            <label>ठेगाना:</label>
+            <input type="text" id="customer-address" placeholder="ठेगाना लेख्नुहोस्">
+        </div>
+
+        <h4 style="margin: 15px 0 5px 0;">सामानको विवरण</h4>
+        <table id="bill-items-table">
+            <thead>
+                <tr>
+                    <th>सि.नं.</th>
+                    <th>विवरण (Particulars)</th>
+                    <th>परिमाण</th>
+                    <th>दर</th>
+                    <th>रकम</th>
+                </tr>
+            </thead>
+            <tbody id="items-body">
+                <tr>
+                    <td>1</td>
+                    <td><input type="text" class="item-desc" style="border:none; width:100%; text-align:center;" placeholder="सामानको नाम"></td>
+                    <td><input type="number" class="item-qty" style="border:none; width:100%; text-align:center;" value="1" oninput="calculateTotals()"></td>
+                    <td><input type="number" class="item-rate" style="border:none; width:100%; text-align:center;" value="0" oninput="calculateTotals()"></td>
+                    <td class="item-amount">0</td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn btn-secondary" style="padding: 6px; font-size: 13px; margin-bottom: 15px;" onclick="addRow()">+ अर्को सामान थप्नुहोस्</button>
+
+        <div class="clearfix">
+            <div class="totals-section">
+                <div class="total-row">
+                    <span>जम्मा (Total):</span>
+                    <span id="sub-total">0</span>
+                </div>
+                <div class="total-row">
+                    <span>छुट (Discount):</span>
+                    <input type="number" id="discount" value="0" style="width: 80px; text-align: right;" oninput="calculateTotals()">
+                </div>
+                <div class="total-row" style="border-top: 2px solid #333; padding-top: 5px;">
+                    <span>कुल जम्मा (Grand Total):</span>
+                    <span id="grand-total">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-bar">
+            <button class="btn" id="btn-save" onclick="saveBill()">💾 सेभ र बिल बनाउनुहोस्</button>
+            <button class="btn btn-secondary" id="btn-pdf" onclick="downloadPDF()" disabled>📥 पीडीएफ डाउनलोड</button>
+            <button class="btn" id="btn-whatsapp" style="background-color: #25D366;" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा सेयर</button>
+            <button class="btn btn-secondary" onclick="window.location.href='database.html'">📊 डाटाबेस हेर्नुहोस्</button>
+        </div>
+        <button class="btn btn-danger" style="margin-top: 10px;" onclick="window.location.href='index.html'">लगआउट गर्नुहोस्</button>
+    </div>
+
+    <script>
+        document.getElementById('bill-date').valueAsDate = new Date();
+        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+        let billGenerated = false;
+
+        // Set next bill number
+        document.getElementById('display-bill-no').textContent = billsDatabase.length + 101;
+
+        function addRow() {
+            const tbody = document.getElementById('items-body');
+            const rowCount = tbody.rows.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="item-desc" style="border:none; width:100%; text-align:center;" placeholder="सामानको नाम"></td>
+                <td><input type="number" class="item-qty" style="border:none; width:100%; text-align:center;" value="1" oninput="calculateTotals()"></td>
+                <td><input type="number" class="item-rate" style="border:none; width:100%; text-align:center;" value="0" oninput="calculateTotals()"></td>
+                <td class="item-amount">0</td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#items-body tr');
+            let subTotal = 0;
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                const amount = qty * rate;
+                row.querySelector('.item-amount').textContent = amount.toFixed(2);
+                subTotal += amount;
+            });
+
+            document.getElementById('sub-total').textContent = subTotal.toFixed(2);
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const grandTotal = subTotal - discount;
+            document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
+        }
+
+        function saveBill() {
+            const billNo = document.getElementById('display-bill-no').textContent;
+            const date = document.getElementById('bill-date').value;
+            const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+            const customerAddress = document.getElementById('customer-address').value || '-';
+            const grandTotal = document.getElementById('grand-total').textContent;
+
+            const rows = document.querySelectorAll('#items-body tr');
+            let items = [];
+            rows.forEach(row => {
+                items.push({
+                    desc: row.querySelector('.item-desc').value,
+                    qty: row.querySelector('.item-qty').value,
+                    rate: row.querySelector('.item-rate').value,
+                    amount: row.querySelector('.item-amount').textContent
+                });
+            });
+
+            const billData = { billNo, date, customerName, customerAddress, items, grandTotal };
+            billsDatabase.push(billData);
+            localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+
+            billGenerated = true;
+            document.getElementById('btn-pdf').removeAttribute('disabled');
+            document.getElementById('btn-whatsapp').removeAttribute('disabled');
+            document.getElementById('btn-save').setAttribute('disabled', 'true');
+
+            alert('बिल सफलतापूर्वक सेभ भयो!');
+        }
+
+        function downloadPDF() {
+            if (!billGenerated) return;
+
+            const { jsPDF } = window.jsPDF;
+            const doc = new jsPDF();
+
+            const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+            const grandTotal = document.getElementById('grand-total').textContent;
+            const billNo = document.getElementById('display-bill-no').textContent;
+            const date = document.getElementById('bill-date').value;
+
+            doc.setFontSize(18);
+            doc.text("Manjula Kirana Pasal", 105, 20, { align: "center" });
+            doc.setFontSize(11);
+            doc.text("Sundarharaincha-9, Morang", 105, 28, { align: "center" });
+            doc.text("PAN No: 624416070", 105, 34, { align: "center" });
+
+            doc.text(`Bill No: ${billNo}`, 20, 45);
+            doc.text(`Date: ${date}`, 150, 45);
+            doc.text(`Customer Name: ${customerName}`, 20, 53);
+
+            doc.text(`Grand Total: Rs. ${grandTotal}`, 20, 70);
+            doc.text("Thank you for your business!", 105, 90, { align: "center" });
+
+            doc.save(`bill_${billNo}.pdf`);
+        }
+
+        function shareWhatsApp() {
+            if (!billGenerated) return;
+
+            const customerName = document.getElementById('customer-name').value || 'ग्राहक';
+            const grandTotal = document.getElementById('grand-total').textContent;
+            const text = encodeURIComponent(`नमस्ते ${customerName}, मञ्जला किराना पसलबाट तपाईँको कुल बिल रकम रु ${grandTotal} रहेको छ। धन्यवाद!`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+    </script>
+</body>
+              </html>
+  
