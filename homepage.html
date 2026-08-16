@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>मञ्जला किराना पसल - गृहपृष्ठ</title>
-    <!-- html2canvas Library to capture bill as Image -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -221,9 +219,8 @@
     <div class="page" style="margin-top: 15px; background: transparent; box-shadow: none; padding: 0;">
         <div class="actions-bar">
             <button class="btn" id="btn-save" onclick="saveBill()">💾 सेभ र बिल बनाउनुहोस्</button>
-            <button class="btn btn-secondary" id="btn-img" onclick="downloadImage()" disabled>📥 बिलको फोटो डाउनलोड गर्नुहोस्</button>
-            <button class="btn btn-whatsapp" id="btn-whatsapp" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा सेयर (फोटो डाउनलोड सहित)</button>
-            <button class="btn btn-email" id="btn-email" onclick="sendEmail()" disabled>📧 इमेल पठाउनुहोस् (फोटो डाउनलोड सहित)</button>
+            <button class="btn btn-whatsapp" id="btn-whatsapp" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा बिल पठाउनुहोस्</button>
+            <button class="btn btn-email" id="btn-email" onclick="sendEmail()" disabled>📧 इमेलमा बिल पठाउनुहोस्</button>
             <button class="btn btn-secondary" onclick="window.location.href='database.html'">📊 डाटाबेस हेर्नुहोस्</button>
             <button class="btn btn-danger" onclick="window.location.href='index.html'">लगआउट गर्नुहोस्</button>
         </div>
@@ -293,7 +290,6 @@
             localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
 
             billGenerated = true;
-            document.getElementById('btn-img').removeAttribute('disabled');
             document.getElementById('btn-whatsapp').removeAttribute('disabled');
             document.getElementById('btn-email').removeAttribute('disabled');
             document.getElementById('btn-save').setAttribute('disabled', 'true');
@@ -301,50 +297,59 @@
             alert('बिल सफलतापूर्वक सेभ भयो!');
         }
 
-        function downloadImage() {
-            if (!billGenerated) return;
-            const receipt = document.getElementById('bill-receipt');
-            html2canvas(receipt, { scale: 2 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg');
-                link.click();
+        function generateBillText() {
+            const billNo = document.getElementById('display-bill-no').textContent;
+            const date = document.getElementById('bill-date').value;
+            const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+            const customerAddress = document.getElementById('customer-address').value || '-';
+            const subTotal = document.getElementById('sub-total').textContent;
+            const discount = document.getElementById('discount').value || '0';
+            const grandTotal = document.getElementById('grand-total').textContent;
+
+            let text = `🛒 *मञ्जला किराना पसल*\n`;
+            text += `शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ\n`;
+            text += `PAN: ६२४४१६०७०\n`;
+            text += `-----------------------------------\n`;
+            text += `बिल नं: ${billNo}\n`;
+            text += `मिति: ${date}\n`;
+            text += `ग्राहक: ${customerName}\n`;
+            text += `ठेगाना: ${customerAddress}\n`;
+            text += `-----------------------------------\n`;
+            text += `*सामानको विवरण:*\n`;
+
+            document.querySelectorAll('#items-body tr').forEach((row, i) => {
+                const desc = row.querySelector('.item-desc').value || 'सामान';
+                const qty = row.querySelector('.item-qty').value || '1';
+                const rate = row.querySelector('.item-rate').value || '0';
+                const amt = row.querySelector('.item-amount').textContent || '0';
+                text += `${i+1}. ${desc} | ${qty} x ${rate} = रु ${amt}\n`;
             });
+
+            text += `-----------------------------------\n`;
+            text += `जम्मा: रु ${subTotal}\n`;
+            text += `छुट: रु ${discount}\n`;
+            text += `*कुल जम्मा: रु ${grandTotal}*\n`;
+            text += `-----------------------------------\n`;
+            text += `धन्यवाद! फेरी आउनुहोला।`;
+
+            return text;
         }
 
         function shareWhatsApp() {
             if (!billGenerated) return;
-            downloadImage(); // Automatically download bill image to gallery
-
-            const customerName = document.getElementById('customer-name').value || 'ग्राहक';
-            const billNo = document.getElementById('display-bill-no').textContent;
-            const grandTotal = document.getElementById('grand-total').textContent;
-            
-            let itemDetails = '';
-            document.querySelectorAll('#items-body tr').forEach((row, i) => {
-                const desc = row.querySelector('.item-desc').value || 'सामान';
-                const qty = row.querySelector('.item-qty').value || '1';
-                const amt = row.querySelector('.item-amount').textContent || '0';
-                itemDetails += `\n${i+1}. ${desc} (${qty} pc) - रु ${amt}`;
-            });
-
-            const text = encodeURIComponent(`*मञ्जला किराना पसल* \nबिल नं: ${billNo}\nग्राहक: ${customerName}\n-------------------${itemDetails}\n-------------------\n*कुल जम्मा: रु ${grandTotal}*\n(नोट: बिलको फोटो डाउनलोड भइसकेको छ, कृपया ग्यालरीबाट फोटो सेलेक्ट गरेर पठाउनुहोस्!)\nधन्यवाद!`);
+            const text = encodeURIComponent(generateBillText());
             window.open(`https://wa.me/?text=${text}`, '_blank');
         }
 
         function sendEmail() {
             if (!billGenerated) return;
-            downloadImage(); // Automatically download bill image to gallery
-
             const email = document.getElementById('customer-email').value;
-            const customerName = document.getElementById('customer-name').value || 'ग्राहक';
             const billNo = document.getElementById('display-bill-no').textContent;
-            const grandTotal = document.getElementById('grand-total').textContent;
-
             const subject = encodeURIComponent(`मञ्जला किराना पसल - बिल नं ${billNo}`);
-            const body = encodeURIComponent(`नमस्ते ${customerName},\n\nतपाईँको मञ्जला किराना पसलको कुल बिल रकम रु ${grandTotal} रहेको छ।\n\n(तपाईँको बिलको इमेज फाइल डाउनलोड भइसकेको छ)\n\nधन्यवाद!`);
+            const body = encodeURIComponent(generateBillText());
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
         }
     </script>
 </body>
 </html>
+
