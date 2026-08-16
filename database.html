@@ -120,7 +120,7 @@
             color: white;
         }
 
-        /* Hidden Receipt Template used to generate accurate image snapshots with Discount */
+        /* Hidden Receipt Template */
         #hidden-receipt-container {
             position: absolute;
             left: -9999px;
@@ -182,7 +182,7 @@
     <div class="page">
         <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
 
-        <!-- SECTION 1: TURNOVER REPORT BY RANGE / TIME -->
+        <!-- SECTION 1: TURNOVER REPORT -->
         <div class="card">
             <h3>📈 कारोबार (Turnover) रिपोर्ट</h3>
             <div class="row">
@@ -352,7 +352,6 @@
         function editBill(index) {
             const bill = billsDatabase[index];
             localStorage.setItem('edit_bill_data', JSON.stringify(bill));
-            // Remove from current list temporarily so user can resave updated version smoothly
             billsDatabase.splice(index, 1);
             localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
             
@@ -383,7 +382,9 @@
             });
 
             const subTotal = subTotalCalc.toFixed(2);
-            const discountVal = parseFloat(bill.discount || 0).toFixed(2);
+            // Calculate discount properly from subtotal and grandTotal if not explicitly saved
+            const grandTotalVal = parseFloat(bill.grandTotal) || subTotalCalc;
+            const computedDiscount = Math.max(0, subTotalCalc - grandTotalVal).toFixed(2);
 
             container.innerHTML = `
                 <div class="receipt-template" id="capture-receipt">
@@ -422,7 +423,7 @@
                             </div>
                             <div class="receipt-total-row">
                                 <span>छुट (Discount):</span>
-                                <span>रु ${discountVal}</span>
+                                <span>रु ${computedDiscount}</span>
                             </div>
                             <div class="receipt-total-row" style="border-top: 2px solid #333; padding-top: 5px;">
                                 <span>कुल जम्मा (Grand Total):</span>
@@ -450,4 +451,4 @@
     </script>
 </body>
     </html>
-    
+                        
