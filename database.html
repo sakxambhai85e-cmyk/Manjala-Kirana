@@ -260,6 +260,7 @@
 
         let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
 
+        // Function to sync single bill to Google Sheets with offline queue handling
         function syncBillToGoogleSheet(billData) {
             fetch(GOOGLE_SHEET_URL, {
                 method: "POST",
@@ -268,7 +269,54 @@
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(billData)
-            }).catch(error => console.error("Google Sheets Sync Error:", error));
+            }).then(() => {
+                console.log(`Bill ${billData.billNo} synced successfully.`);
+            }).catch(error => {
+                console.warn("Offline or sync failed. Queuing for later sync...", error);
+                saveToOfflineQueue(billData);
+            });
+        }
+
+        // Save failed sync items into a local storage queue
+        function saveToOfflineQueue(billData) {
+            let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
+            // Prevent duplicate entries in queue
+            if (!queue.some(b => b.billNo === billData.billNo)) {
+                queue.push(billData);
+                localStorage.setItem('offline_sync_queue', JSON.stringify(queue));
+            }
+        }
+
+        // Process queue automatically when internet comes back online
+        window.addEventListener('online', processOfflineQueue);
+
+        function processOfflineQueue() {
+            let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
+            if (queue.length === 0) return;
+
+            console.log("Internet restored. Flushing offline sync queue...");
+            let remainingQueue = [];
+
+            queue.forEach(billData => {
+                fetch(GOOGLE_SHEET_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(billData)
+                }).then(() => {
+                    console.log(`Queued bill ${billData.billNo} synced successfully after reconnect.`);
+                }).catch(() => {
+                    remainingQueue.push(billData);
+                });
+            });
+
+            // Update queue with any items that still failed
+            localStorage.setItem('offline_sync_queue', JSON.stringify(remainingQueue));
+        }
+
+        // Try syncing queue on page load just in case internet is already back
+        if (navigator.onLine) {
+            processOfflineQueue();
         }
 
         function toggleDateInputs() {
@@ -377,7 +425,7 @@
             const bill = billsDatabase.find(b => b.billNo === billNo);
             if (!bill) return;
 
-            // Trigger cloud sync as well just to be completely up to date
+            // Trigger cloud sync or queue it if offline
             syncBillToGoogleSheet(bill);
 
             const container = document.getElementById('hidden-receipt-container');
@@ -457,15 +505,4 @@
                     link.download = `PAN_Bill_${bill.billNo}.jpg`;
                     link.href = canvas.toDataURL('image/jpeg');
                     link.click();
-                    container.innerHTML = '';
-                });
-            }, 200);
-        }
-
-        // Initial load
-        calculateTurnover();
-        filterData();
-    </script>
-</body>
-    </html>
-    
+ 
