@@ -91,11 +91,11 @@
             <p>कारोबार प्रणालीमा स्वागत छ</p>
             <div class="form-group">
                 <label>प्रयोगकर्ताको नाम (User)</label>
-                <input type="text" id="username" value="मञ्जला">
+                <input type="text" id="username" placeholder="प्रयोगकर्ताको नाम लेख्नुहोस्">
             </div>
             <div class="form-group">
                 <label>पासवर्ड (Password)</label>
-                <input type="password" id="password" placeholder="पासवर्ड हाल्नुहोस् (०१११)">
+                <input type="password" id="password" placeholder="पासवर्ड राख्नुहोस्">
             </div>
             <button class="btn" onclick="handleLogin()">प्रवेश गर्नुहोस् (Login)</button>
             <p id="login-error"></p>
@@ -110,7 +110,6 @@
 
             if (user === 'मञ्जला' && pass === '०१११') {
                 errorElement.textContent = '';
-                // Redirects to homepage when created
                 window.location.href = 'homepage.html';
             } else {
                 errorElement.textContent = 'गलत प्रयोगकर्ता नाम वा पासवर्ड!';
