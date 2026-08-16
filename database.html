@@ -119,6 +119,10 @@
             background-color: #f39c12;
             color: white;
         }
+        .btn-info {
+            background-color: #8e44ad;
+            color: white;
+        }
 
         /* Hidden Receipt Template */
         #hidden-receipt-container {
@@ -182,6 +186,16 @@
 
     <div class="page">
         <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
+
+        <!-- NEW RECOVERY SECTION: JSON FILE IMPORT -->
+        <div class="card" style="border-color: #8e44ad; background: #fdfefe;">
+            <h3 style="color: #8e44ad;">🔄 डाटा रिकभरी (JSON फाइल अपलोड गर्नुहोस्)</h3>
+            <div class="form-group">
+                <label>गुगल शीट वा ब्याकअपबाट डाउनलोड गरिएको JSON फाइल छान्नुहोस्:</label>
+                <input type="file" id="json-file-input" accept=".json" style="background: white; padding: 6px;">
+            </div>
+            <button class="btn btn-info" onclick="importJsonData()">📥 डाटा रिकभर (Restore) गर्नुहोस्</button>
+        </div>
 
         <!-- SECTION 1: TURNOVER REPORT -->
         <div class="card">
@@ -260,6 +274,39 @@
 
         let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
 
+        // Function to import and recover JSON data into browser storage and app database
+        function importJsonData() {
+            const fileInput = document.getElementById('json-file-input');
+            if (fileInput.files.length === 0) {
+                alert('कृपया पहिले एउटा JSON फाइल छान्नुहोस्!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    if (Array.isArray(importedData)) {
+                        // Merge or replace with existing bills securely
+                        billsDatabase = importedData;
+                        localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+                        calculateTurnover();
+                        filterData();
+                        alert('डाटा सफलतापूर्वक रिकभर (Restore) भयो!');
+                    } else {
+                        alert('अमान्य फाइल ढाँचा! यो सहि बिल JSON डेटा होइन।');
+                    }
+                } catch (error) {
+                    alert('JSON फाइल पढ्दा त्रुटि भयो। कृपया सही फाइल छान्नुहोस्।');
+                    console.error(error);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
         // Function to sync single bill to Google Sheets with offline queue handling
         function syncBillToGoogleSheet(billData) {
             fetch(GOOGLE_SHEET_URL, {
@@ -280,7 +327,6 @@
         // Save failed sync items into a local storage queue
         function saveToOfflineQueue(billData) {
             let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
-            // Prevent duplicate entries in queue
             if (!queue.some(b => b.billNo === billData.billNo)) {
                 queue.push(billData);
                 localStorage.setItem('offline_sync_queue', JSON.stringify(queue));
@@ -310,11 +356,9 @@
                 });
             });
 
-            // Update queue with any items that still failed
             localStorage.setItem('offline_sync_queue', JSON.stringify(remainingQueue));
         }
 
-        // Try syncing queue on page load just in case internet is already back
         if (navigator.onLine) {
             processOfflineQueue();
         }
@@ -425,7 +469,6 @@
             const bill = billsDatabase.find(b => b.billNo === billNo);
             if (!bill) return;
 
-            // Trigger cloud sync or queue it if offline
             syncBillToGoogleSheet(bill);
 
             const container = document.getElementById('hidden-receipt-container');
@@ -468,41 +511,3 @@
                     </div>
                     <table class="receipt-table">
                         <thead>
-                            <tr>
-                                <th style="width: 8%;">सि.नं.</th>
-                                <th style="width: 42%;">विवरण</th>
-                                <th style="width: 15%;">परिमाण</th>
-                                <th style="width: 15%;">दर</th>
-                                <th style="width: 20%;">रकम</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                    <div class="clearfix">
-                        <div class="receipt-totals">
-                            <div class="receipt-total-row">
-                                <span>जम्मा (Total):</span>
-                                <span>रु ${subTotal}</span>
-                            </div>
-                            <div class="receipt-total-row">
-                                <span>छुट (Discount):</span>
-                                <span>रु ${computedDiscount}</span>
-                            </div>
-                            <div class="receipt-total-row" style="border-top: 2px solid #333; padding-top: 5px;">
-                                <span>कुल जम्मा (Grand Total):</span>
-                                <span>रु ${bill.grandTotal}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            setTimeout(() => {
-                html2canvas(document.getElementById('capture-receipt'), { scale: 2 }).then(canvas => {
-                    const link = document.createElement('a');
-                    link.download = `PAN_Bill_${bill.billNo}.jpg`;
-                    link.href = canvas.toDataURL('image/jpeg');
-                    link.click();
- 
