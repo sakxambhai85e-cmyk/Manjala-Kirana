@@ -140,6 +140,7 @@
             margin-bottom: 12px;
         }
         .receipt-header h2 { font-size: 20px; color: #2c3e50; margin-bottom: 4px; }
+        .receipt-header h3 { font-size: 15px; color: #c0392b; margin-bottom: 4px; font-weight: bold; }
         .receipt-header p { font-size: 12px; color: #555; }
         .receipt-info {
             display: flex;
@@ -255,7 +256,20 @@
     <div id="hidden-receipt-container"></div>
 
     <script>
+        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzGs5KJV70vdpbpAO6qzxdHPtZAAyI_9Gs8KmLDmTHiflALdZ8A7Q7j_4q4vQ-shXya/exec";
+
         let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+
+        function syncBillToGoogleSheet(billData) {
+            fetch(GOOGLE_SHEET_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(billData)
+            }).catch(error => console.error("Google Sheets Sync Error:", error));
+        }
 
         function toggleDateInputs() {
             const period = document.getElementById('filter-period').value;
@@ -363,6 +377,9 @@
             const bill = billsDatabase.find(b => b.billNo === billNo);
             if (!bill) return;
 
+            // Trigger cloud sync as well just to be completely up to date
+            syncBillToGoogleSheet(bill);
+
             const container = document.getElementById('hidden-receipt-container');
             
             let itemsHtml = '';
@@ -382,7 +399,6 @@
             });
 
             const subTotal = subTotalCalc.toFixed(2);
-            // Calculate discount properly from subtotal and grandTotal if not explicitly saved
             const grandTotalVal = parseFloat(bill.grandTotal) || subTotalCalc;
             const computedDiscount = Math.max(0, subTotalCalc - grandTotalVal).toFixed(2);
 
@@ -390,6 +406,7 @@
                 <div class="receipt-template" id="capture-receipt">
                     <div class="receipt-header">
                         <h2>मञ्जला किराना पसल</h2>
+                        <h3>पान रसीद (PAN BILL)</h3>
                         <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
                         <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
                     </div>
@@ -437,7 +454,7 @@
             setTimeout(() => {
                 html2canvas(document.getElementById('capture-receipt'), { scale: 2 }).then(canvas => {
                     const link = document.createElement('a');
-                    link.download = `bill_${bill.billNo}.jpg`;
+                    link.download = `PAN_Bill_${bill.billNo}.jpg`;
                     link.href = canvas.toDataURL('image/jpeg');
                     link.click();
                     container.innerHTML = '';
@@ -451,4 +468,4 @@
     </script>
 </body>
     </html>
-                        
+    
