@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>मञ्जला किराना पसल - लगइन</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60;
+            --danger-color: #c0392b;
+            --bg-color: #f4f6f7;
+            --white: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 10px;
+        }
+        .page {
+            width: 100%;
+            max-width: 400px;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .login-container {
+            text-align: center;
+        }
+        .login-container h2 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        .login-container p {
+            margin-bottom: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #login-error {
+            color: var(--danger-color);
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1: LOGIN PAGE -->
+    <div id="page1" class="page">
+        <div class="login-container">
+            <h2>मञ्जला किराना पसल</h2>
+            <p>कारोबार प्रणालीमा स्वागत छ</p>
+            <div class="form-group">
+                <label>प्रयोगकर्ताको नाम (User)</label>
+                <input type="text" id="username" value="मञ्जला">
+            </div>
+            <div class="form-group">
+                <label>पासवर्ड (Password)</label>
+                <input type="password" id="password" placeholder="पासवर्ड हाल्नुहोस् (०१११)">
+            </div>
+            <button class="btn" onclick="handleLogin()">प्रवेश गर्नुहोस् (Login)</button>
+            <p id="login-error"></p>
+        </div>
+    </div>
+
+    <script>
+        function handleLogin() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            const errorElement = document.getElementById('login-error');
+
+            if (user === 'मञ्जला' && pass === '०१११') {
+                errorElement.textContent = '';
+                // Redirects to homepage when created
+                window.location.href = 'homepage.html';
+            } else {
+                errorElement.textContent = 'गलत प्रयोगकर्ता नाम वा पासवर्ड!';
+            }
+        }
+    </script>
+</body>
+</html>
