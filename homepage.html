@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>मञ्जला किराना पसल - गृहपृष्ठ</title>
-    <!-- jsPDF Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2canvas Library to capture bill as Image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -54,21 +54,21 @@
             margin-bottom: 10px;
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-align: left;
         }
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
         }
         .form-group input {
             width: 100%;
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 15px;
         }
         table {
             width: 100%;
@@ -109,11 +109,11 @@
             color: var(--white);
             border: none;
             padding: 12px 20px;
-            font-size: 16px;
+            font-size: 15px;
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .btn:disabled {
             background-color: #bdc3c7;
@@ -125,21 +125,24 @@
         .btn-secondary {
             background-color: #2980b9;
         }
+        .btn-whatsapp {
+            background-color: #25D366;
+        }
+        .btn-email {
+            background-color: #e67e22;
+        }
         .actions-bar {
             display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        .actions-bar button {
-            flex: 1;
-            min-width: 45%;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
 
-    <div class="page">
+    <!-- Printable Bill Receipt Area -->
+    <div class="page" id="bill-receipt">
         <div class="header-box">
             <h1>मञ्जला किराना पसल</h1>
             <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
@@ -147,8 +150,8 @@
         </div>
 
         <div class="bill-info">
-            <div><label>बिल नं: <span id="display-bill-no">101</span></label></div>
-            <div><label>मिति: <input type="date" id="bill-date" style="padding: 2px; font-size: 12px;"></label></div>
+            <div><label>बिल नं: <span id="display-bill-no">00001</span></label></div>
+            <div><label>मिति: <input type="date" id="bill-date" style="padding: 2px; font-size: 12px; border:none; background:transparent;"></label></div>
         </div>
 
         <div class="form-group">
@@ -158,6 +161,10 @@
         <div class="form-group">
             <label>ठेगाना:</label>
             <input type="text" id="customer-address" placeholder="ठेगाना लेख्नुहोस्">
+        </div>
+        <div class="form-group">
+            <label>इमेल ठेगाना (Email):</label>
+            <input type="email" id="customer-email" placeholder="customer@gmail.com">
         </div>
 
         <h4 style="margin: 15px 0 5px 0;">सामानको विवरण</h4>
@@ -181,7 +188,7 @@
                 </tr>
             </tbody>
         </table>
-        <button class="btn btn-secondary" style="padding: 6px; font-size: 13px; margin-bottom: 15px;" onclick="addRow()">+ अर्को सामान थप्नुहोस्</button>
+        <button class="btn btn-secondary no-print" style="padding: 6px; font-size: 13px; margin-bottom: 15px;" onclick="addRow()">+ अर्को सामान थप्नुहोस्</button>
 
         <div class="clearfix">
             <div class="totals-section">
@@ -191,7 +198,7 @@
                 </div>
                 <div class="total-row">
                     <span>छुट (Discount):</span>
-                    <input type="number" id="discount" value="0" style="width: 80px; text-align: right;" oninput="calculateTotals()">
+                    <input type="number" id="discount" value="0" style="width: 80px; text-align: right; border:1px solid #ccc; padding:2px;" oninput="calculateTotals()">
                 </div>
                 <div class="total-row" style="border-top: 2px solid #333; padding-top: 5px;">
                     <span>कुल जम्मा (Grand Total):</span>
@@ -199,14 +206,18 @@
                 </div>
             </div>
         </div>
+    </div>
 
+    <!-- Action Buttons Bar Outside Receipt Container -->
+    <div class="page" style="margin-top: 15px; background: transparent; box-shadow: none; padding: 0;">
         <div class="actions-bar">
             <button class="btn" id="btn-save" onclick="saveBill()">💾 सेभ र बिल बनाउनुहोस्</button>
-            <button class="btn btn-secondary" id="btn-pdf" onclick="downloadPDF()" disabled>📥 पीडीएफ डाउनलोड</button>
-            <button class="btn" id="btn-whatsapp" style="background-color: #25D366;" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा सेयर</button>
+            <button class="btn btn-secondary" id="btn-img" onclick="downloadImage()" disabled>📥 बिलको फोटो डाउनलोड गर्नुहोस्</button>
+            <button class="btn btn-whatsapp" id="btn-whatsapp" onclick="shareWhatsApp()" disabled>📱 व्हाट्सएपमा सेयर</button>
+            <button class="btn btn-email" id="btn-email" onclick="sendEmail()" disabled>📧 इमेल पठाउनुहोस्</button>
             <button class="btn btn-secondary" onclick="window.location.href='database.html'">📊 डाटाबेस हेर्नुहोस्</button>
+            <button class="btn btn-danger" onclick="window.location.href='index.html'">लगआउट गर्नुहोस्</button>
         </div>
-        <button class="btn btn-danger" style="margin-top: 10px;" onclick="window.location.href='index.html'">लगआउट गर्नुहोस्</button>
     </div>
 
     <script>
@@ -214,8 +225,9 @@
         let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
         let billGenerated = false;
 
-        // Set next bill number
-        document.getElementById('display-bill-no').textContent = billsDatabase.length + 101;
+        // Set bill number with 5-digit padding (e.g., 00001, 00002)
+        const nextBillNum = String(billsDatabase.length + 1).padStart(5, '0');
+        document.getElementById('display-bill-no').textContent = nextBillNum;
 
         function addRow() {
             const tbody = document.getElementById('items-body');
@@ -254,67 +266,76 @@
             const date = document.getElementById('bill-date').value;
             const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
             const customerAddress = document.getElementById('customer-address').value || '-';
+            const customerEmail = document.getElementById('customer-email').value || '';
             const grandTotal = document.getElementById('grand-total').textContent;
 
             const rows = document.querySelectorAll('#items-body tr');
             let items = [];
             rows.forEach(row => {
                 items.push({
-                    desc: row.querySelector('.item-desc').value,
-                    qty: row.querySelector('.item-qty').value,
-                    rate: row.querySelector('.item-rate').value,
-                    amount: row.querySelector('.item-amount').textContent
+                    desc: row.querySelector('.item-desc').value || 'सामान',
+                    qty: row.querySelector('.item-qty').value || '1',
+                    rate: row.querySelector('.item-rate').value || '0',
+                    amount: row.querySelector('.item-amount').textContent || '0'
                 });
             });
 
-            const billData = { billNo, date, customerName, customerAddress, items, grandTotal };
+            const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
             billsDatabase.push(billData);
             localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
 
             billGenerated = true;
-            document.getElementById('btn-pdf').removeAttribute('disabled');
+            document.getElementById('btn-img').removeAttribute('disabled');
             document.getElementById('btn-whatsapp').removeAttribute('disabled');
+            document.getElementById('btn-email').removeAttribute('disabled');
             document.getElementById('btn-save').setAttribute('disabled', 'true');
 
             alert('बिल सफलतापूर्वक सेभ भयो!');
         }
 
-        function downloadPDF() {
+        function downloadImage() {
             if (!billGenerated) return;
-
-            const { jsPDF } = window.jsPDF;
-            const doc = new jsPDF();
-
-            const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
-            const grandTotal = document.getElementById('grand-total').textContent;
-            const billNo = document.getElementById('display-bill-no').textContent;
-            const date = document.getElementById('bill-date').value;
-
-            doc.setFontSize(18);
-            doc.text("Manjula Kirana Pasal", 105, 20, { align: "center" });
-            doc.setFontSize(11);
-            doc.text("Sundarharaincha-9, Morang", 105, 28, { align: "center" });
-            doc.text("PAN No: 624416070", 105, 34, { align: "center" });
-
-            doc.text(`Bill No: ${billNo}`, 20, 45);
-            doc.text(`Date: ${date}`, 150, 45);
-            doc.text(`Customer Name: ${customerName}`, 20, 53);
-
-            doc.text(`Grand Total: Rs. ${grandTotal}`, 20, 70);
-            doc.text("Thank you for your business!", 105, 90, { align: "center" });
-
-            doc.save(`bill_${billNo}.pdf`);
+            const receipt = document.getElementById('bill-receipt');
+            html2canvas(receipt).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg');
+                link.link;
+                link.click();
+            });
         }
 
         function shareWhatsApp() {
             if (!billGenerated) return;
 
             const customerName = document.getElementById('customer-name').value || 'ग्राहक';
+            const billNo = document.getElementById('display-bill-no').textContent;
             const grandTotal = document.getElementById('grand-total').textContent;
-            const text = encodeURIComponent(`नमस्ते ${customerName}, मञ्जला किराना पसलबाट तपाईँको कुल बिल रकम रु ${grandTotal} रहेको छ। धन्यवाद!`);
+            
+            const rows = document.querySelectorAll('#items-body');
+            let itemDetails = '';
+            document.querySelectorAll('#items-body tr').forEach((row, i) => {
+                const desc = row.querySelector('.item-desc').value || 'सामान';
+                const qty = row.querySelector('.item-qty').value || '1';
+                const amt = row.querySelector('.item-amount').textContent || '0';
+                itemDetails += `\n${i+1}. ${desc} (${qty} pc) - रु ${amt}`;
+            });
+
+            const text = encodeURIComponent(`*मञ्जला किराना पसल* \nबिल नं: ${billNo}\nग्राहक: ${customerName}\n-------------------${itemDetails}\n-------------------\n*कुल जम्मा: रु ${grandTotal}*\nधन्यवाद!`);
             window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+
+        function sendEmail() {
+            if (!billGenerated) return;
+            const email = document.getElementById('customer-email').value;
+            const customerName = document.getElementById('customer-name').value || 'ग्राहक';
+            const billNo = document.getElementById('display-bill-no').textContent;
+            const grandTotal = document.getElementById('grand-total').textContent;
+
+            const subject = encodeURIComponent(`मञ्जला किराना पसल - बिल नं ${billNo}`);
+            const body = encodeURIComponent(`नमस्ते ${customerName},\n\nतपाईँको मञ्जला किराना पसलको कुल बिल रकम रु ${grandTotal} रहेको छ।\n\nधन्यवाद!`);
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
         }
     </script>
 </body>
-              </html>
-  
+</html>
