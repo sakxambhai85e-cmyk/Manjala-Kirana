@@ -42,6 +42,13 @@
         .header-box h1 {
             font-size: 22px;
             color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+        .header-box h3 {
+            font-size: 15px;
+            color: var(--danger-color);
+            margin-bottom: 4px;
+            font-weight: bold;
         }
         .header-box p {
             font-size: 13px;
@@ -162,6 +169,7 @@
     <div class="page" id="bill-receipt">
         <div class="header-box">
             <h1>मञ्जला किराना पसल</h1>
+            <h3>पान रसीद (PAN BILL)</h3>
             <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
             <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
         </div>
@@ -335,6 +343,7 @@
             const grandTotal = document.getElementById('grand-total').textContent;
 
             let text = `🛒 *मञ्जला किराना पसल*\n`;
+            text += `पान रसीद (PAN BILL)\n`;
             text += `शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ\n`;
             text += `PAN: ६२४४१६०७०\n`;
             text += `-----------------------------------\n`;
