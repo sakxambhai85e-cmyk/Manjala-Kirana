@@ -272,11 +272,18 @@ th {
 <div id="hidden-receipt-container"></div>
     
     <script>
-        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzGs5KJV70vdpbpAO6qzxdHPtZAAyI_9Gs8KmLDmTHiflALdZ8A7Q7j_4q4vQ-shXya/exec";
+        custom') {
+                        const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzGs5KJV70vdpbpAO6qzxdHPtZAAyI_9Gs8KmLDmTHiflALdZ8A7Q7j_4q4vQ-shXya/exec";
 
 let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
 
-// Fetch live bills from Google Sheet on startup
+// Render everything instantly on page load using local storage cache
+window.addEventListener('DOMContentLoaded', () => {
+    calculateTurnover();
+    renderBillsTable(billsDatabase);
+});
+
+// Fetch live bills from Google Sheet on startup in the background
 function fetchBillsFromGoogleSheet() {
     fetch(GOOGLE_SHEET_URL)
         .then(response => response.json())
@@ -285,7 +292,8 @@ function fetchBillsFromGoogleSheet() {
                 billsDatabase = data;
                 localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
                 calculateTurnover();
-                filterData();
+                // Keep current filter view if user is searching, otherwise show all
+                filterData(); 
                 console.log("Bills successfully loaded from Google Sheet.");
             }
         })
@@ -423,12 +431,11 @@ function calculateTurnover() {
     document.getElementById('turnover-display').textContent = `कुल कारोबार: रु ${total.toFixed(2)}`;
 }
 
+// Filter bills based on search inputs
 function filterData() {
     const billNoQuery = document.getElementById('search-billno').value.toLowerCase().trim();
     const itemQuery = document.getElementById('search-item').value.toLowerCase().trim();
     const customerQuery = document.getElementById('search-customer').value.toLowerCase().trim();
-    const tbody = document.getElementById('database-rows');
-    tbody.innerHTML = '';
 
     let filteredBills = billsDatabase.filter(bill => {
         let matchesBillNo = (bill.billNo || '').toLowerCase().includes(billNoQuery);
@@ -442,12 +449,20 @@ function filterData() {
         return matchesBillNo && matchesCustomer && matchesItem;
     });
 
-    if (filteredBills.length === 0) {
+    renderBillsTable(filteredBills);
+}
+
+// Dedicated function to render the table rows cleanly
+function renderBillsTable(billsToRender) {
+    const tbody = document.getElementById('database-rows');
+    tbody.innerHTML = '';
+
+    if (!billsToRender || billsToRender.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5">कुनै पनि रेकर्ड फेला परेन।</td></tr>`;
         return;
     }
 
-    filteredBills.forEach((bill) => {
+    billsToRender.forEach((bill) => {
         const originalIndex = billsDatabase.indexOf(bill);
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -569,6 +584,7 @@ function generateReceiptImage(billNo) {
         });
     }, 300);
     }
+    
         
     </script>
 </body>
