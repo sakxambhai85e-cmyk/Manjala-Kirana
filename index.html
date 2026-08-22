@@ -108,18 +108,43 @@
         </form>
     </div>
 
-    <script>
-        function handleLogin(event) {
+    <!-- Firebase SDK & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
+            authDomain: "karobarapp-950e8.firebaseapp.com",
+            projectId: "karobarapp-950e8",
+            storageBucket: "karobarapp-950e8.firebasestorage.app",
+            messagingSenderId: "590048865310",
+            appId: "1:590048865310:web:af35ec728e1829254920f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Update your form labels/inputs in index.html from Username to Email if using Firebase Auth, 
+        // or keep text input if mapping username to a specific email format like manjala@karobar.com
+        window.handleLogin = async function(event) {
             event.preventDefault();
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
+            const errorMsg = document.getElementById('error-message');
 
-            if (user === "Manjala" && pass === "9943") {
+            // Convert username input into a standard Firebase email format, or use an email field
+            const email = user.includes('@') ? user : `${user.toLowerCase()}@karobar.com`;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
                 window.location.href = 'homepage.html';
-            } else {
-                document.getElementById('error-message').style.display = 'block';
+            } catch (error) {
+                errorMsg.style.display = 'block';
+                console.error(error.message);
             }
         }
     </script>
+
 </body>
 </html>
