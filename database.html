@@ -277,7 +277,7 @@
 
     <!-- UI Management & Rendering Logic -->
     <script>
-        function renderBillsTable(bills) {
+                function renderBillsTable(bills) {
             const tbody = document.getElementById('database-rows');
             tbody.innerHTML = '';
 
@@ -293,7 +293,9 @@
                     <td>${bill.date || ''}</td>
                     <td>${bill.customerName || 'साधारण ग्राहक'}</td>
                     <td>रु ${bill.grandTotal || '0.00'}</td>
-                    <td><button class="btn btn-danger" onclick="deleteBill('${bill.billNo}')">मेट्नुहोस्</button></td>
+                    <td>
+                        <button class="btn btn-warning" style="padding: 4px 8px; font-size: 11px; background-color: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.location.href='edit.html?billNo=${bill.billNo}'">✏️ सम्पादन / बिल</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
