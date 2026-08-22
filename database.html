@@ -212,9 +212,25 @@
         <!-- Firebase SDK & Database Rendering Script -->
     <script type="module">
 
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
+const firebaseConfig = {
+    apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
+    authDomain: "karobarapp-950e8.firebaseapp.com",
+    projectId: "karobarapp-950e8",
+    storageBucket: "karobarapp-950e8.firebasestorage.app",
+    messagingSenderId: "590048865310",
+    appId: "1:590048865310:web:af35ec728e1829254920f"
+};
+
+// 1. Initialize Firebase App First
+const app = initializeApp(firebaseConfig);
+
+// 2. Setup Auth & Firestore using initialized app instance
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Check if user is authenticated; if not, kick them back to login page
 onAuthStateChanged(auth, (user) => {
@@ -222,218 +238,55 @@ onAuthStateChanged(auth, (user) => {
         window.location.href = 'index.html';
     }
 });
-        
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
-            authDomain: "karobarapp-950e8.firebaseapp.com",
-            projectId: "karobarapp-950e8",
-            storageBucket: "karobarapp-950e8.firebasestorage.app",
-            messagingSenderId: "590048865310",
-            appId: "1:590048865310:web:af35ec728e1829254920f"
-        };
+let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof calculateTurnover === 'function') calculateTurnover();
+    if (typeof renderBillsTable === 'function') renderBillsTable(billsDatabase);
+    fetchBillsFromFirebase();
+});
 
-        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (typeof calculateTurnover === 'function') calculateTurnover();
-            if (typeof renderBillsTable === 'function') renderBillsTable(billsDatabase);
-            fetchBillsFromFirebase();
+async function fetchBillsFromFirebase() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "bills"));
+        let fetchedBills = [];
+        querySnapshot.forEach((document) => {
+            fetchedBills.push(document.data());
         });
 
-        async function fetchBillsFromFirebase() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "bills"));
-                let fetchedBills = [];
-                querySnapshot.forEach((document) => {
-                    fetchedBills.push(document.data());
-                });
-
-                if (fetchedBills.length > 0) {
-                    fetchedBills.sort((a, b) => a.billNo.localeCompare(b.billNo));
-                    billsDatabase = fetchedBills;
-                    localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
-                    if (typeof calculateTurnover === 'function') calculateTurnover();
-                    if (typeof filterData === 'function') filterData();
-                    console.log("Bills successfully synced from Firebase.");
-                }
-            } catch (error) {
-                console.warn("Could not fetch from Firebase, using local storage.", error);
-            }
+        if (fetchedBills.length > 0) {
+            fetchedBills.sort((a, b) => a.billNo.localeCompare(b.billNo));
+            billsDatabase = fetchedBills;
+            localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+            if (typeof calculateTurnover === 'function') calculateTurnover();
+            if (typeof filterData === 'function') filterData();
+            console.log("Bills successfully synced from Firebase.");
         }
+    } catch (error) {
+        console.warn("Could not fetch from Firebase, using local storage.", error);
+    }
+}
 
-        window.syncBillToFirebase = async function(billData) {
-            try {
-                await setDoc(doc(db, "bills", String(billData.billNo)), billData);
-            } catch (error) {
-                console.error("Error syncing to Firebase: ", error);
-            }
-        };
+window.syncBillToFirebase = async function(billData) {
+    try {
+        await setDoc(doc(db, "bills", String(billData.billNo)), billData);
+    } catch (error) {
+        console.error("Error syncing to Firebase: ", error);
+    }
+};
 
-        window.deleteBillFromFirebase = async function(billNo) {
-            try {
-                await deleteDoc(doc(db, "bills", String(billNo)));
-            } catch (error) {
-                console.error("Error deleting from Firebase: ", error);
-            }
-        };
+window.deleteBillFromFirebase = async function(billNo) {
+    try {
+        await deleteDoc(doc(db, "bills", String(billNo)));
+    } catch (error) {
+        console.error("Error deleting from Firebase: ", error);
+    }
+};
 
-        window.billsDatabase = billsDatabase;
-        window.fetchBillsFromFirebase = fetchBillsFromFirebase;
-    </script>
-
-    <!-- UI Management & Rendering Logic -->
-    <script>
-                function renderBillsTable(bills) {
-            const tbody = document.getElementById('database-rows');
-            tbody.innerHTML = '';
-
-            if (!bills || bills.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5">कुनै बिल फेला परेन।</td></tr>';
-                return;
-            }
-
-            bills.forEach((bill) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${bill.billNo || ''}</td>
-                    <td>${bill.date || ''}</td>
-                    <td>${bill.customerName || 'साधारण ग्राहक'}</td>
-                    <td>रु ${bill.grandTotal || '0.00'}</td>
-                    <td>
-                        <button class="btn btn-warning" style="padding: 4px 8px; font-size: 11px; background-color: #f39c12; color: white; border: none; border-radius: 4px; cursor: pointer;" onclick="window.location.href='edit.html?billNo=${bill.billNo}'">✏️ सम्पादन / बिल</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function toggleDateInputs() {
-            const period = document.getElementById('filter-period').value;
-            const customBox = document.getElementById('custom-date-box');
-            if (period === 'custom') {
-                customBox.style.display = 'flex';
-            } else {
-                customBox.style.display = 'none';
-                calculateTurnover();
-            }
-        }
-
-        function calculateTurnover() {
-            const period = document.getElementById('filter-period').value;
-            let total = 0;
-            const now = new Date();
-
-            const bills = window.billsDatabase || [];
-
-            bills.forEach(bill => {
-                const billDate = new Date(bill.date);
-                let include = false;
-
-                if (period === 'all') {
-                    include = true;
-                } else if (period === 'weekly') {
-                    const oneWeekAgo = new Date();
-                    oneWeekAgo.setDate(now.getDate() - 7);
-                    if (billDate >= oneWeekAgo && billDate <= now) include = true;
-                } else if (period === 'monthly') {
-                    if (billDate.getMonth() === now.getMonth() && billDate.getFullYear() === now.getFullYear()) include = true;
-                } else if (period === 'yearly') {
-                    if (billDate.getFullYear() === now.getFullYear()) include = true;
-                } else if (period === 'custom') {
-                    const fromStr = document.getElementById('date-from').value;
-                    const toStr = document.getElementById('date-to').value;
-                    if (fromStr && toStr) {
-                        const fromDate = new Date(fromStr);
-                        const toDate = new Date(toStr);
-                        toDate.setHours(23, 59, 59);
-                        if (billDate >= fromDate && billDate <= toDate) include = true;
-                    } else {
-                        include = true;
-                    }
-                }
-
-                if (include) {
-                    total += parseFloat(bill.grandTotal) || 0;
-                }
-            });
-
-            document.getElementById('turnover-display').textContent = `कुल कारोबार: रु ${total.toFixed(2)}`;
-        }
-
-        function filterData() {
-            const billNoQuery = document.getElementById('search-billno').value.toLowerCase();
-            const itemQuery = document.getElementById('search-item').value.toLowerCase();
-            const customerQuery = document.getElementById('search-customer').value.toLowerCase();
-
-            const bills = window.billsDatabase || [];
-
-            const filtered = bills.filter(bill => {
-                const matchBill = (bill.billNo || '').toLowerCase().includes(billNoQuery);
-                const matchCustomer = (bill.customerName || '').toLowerCase().includes(customerQuery);
-                
-                let matchItem = true;
-                if (itemQuery) {
-                    matchItem = (bill.items || []).some(item => (item.desc || '').toLowerCase().includes(itemQuery));
-                }
-
-                return matchBill && matchCustomer && matchItem;
-            });
-
-            renderBillsTable(filtered);
-        }
-
-        async function deleteBill(billNo) {
-            if (confirm(`के तपाई बिल नं ${billNo} मेटाउन चाहनुहुन्छ?`)) {
-                if (typeof window.deleteBillFromFirebase === 'function') {
-                    await window.deleteBillFromFirebase(billNo);
-                }
-                window.billsDatabase = window.billsDatabase.filter(b => b.billNo !== billNo);
-                localStorage.setItem('karobar_bills', JSON.stringify(window.billsDatabase));
-                renderBillsTable(window.billsDatabase);
-                calculateTurnover();
-                alert('बिल सफलतापूर्वक मेटाइयो!');
-            }
-        }
-
-        function importJsonData() {
-            const fileInput = document.getElementById('json-file-input');
-            if (fileInput.files.length === 0) {
-                alert('कृपया पहिले एउटा JSON फाइल छान्नुहोस्!');
-                return;
-            }
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (Array.isArray(importedData)) {
-                        window.billsDatabase = importedData;
-                        localStorage.setItem('karobar_bills', JSON.stringify(importedData));
-                        
-                        for (let bill of importedData) {
-                            if (typeof window.syncBillToFirebase === 'function') {
-                                await window.syncBillToFirebase(bill);
-                            }
-                        }
-
-                        renderBillsTable(window.billsDatabase);
-                        calculateTurnover();
-                        alert('डाटा सफलतापूर्वक रिकभर (Restore) भयो!');
-                    } else {
-                        alert('अमान्य फाइल ढाँचा (Invalid JSON format)');
-                    }
-                } catch (err) {
-                    alert('फाइल पढ्न सकिएन: ' + err.message);
-                }
-            };
-            reader.readAsText(file);
-        }
+window.billsDatabase = billsDatabase;
+window.fetchBillsFromFirebase = fetchBillsFromFirebase;
+        
     </script>
 </body>
     </html>
