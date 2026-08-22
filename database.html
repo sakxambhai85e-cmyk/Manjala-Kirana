@@ -4,510 +4,572 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>मञ्जला किराना पसल - रिपोर्ट तथा डाटाबेस</title>
-    <!-- html2canvas Library to generate bill images from database records -->
+    <!-- html2canvas Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         :root {
-            --primary-color: #2c3e50;
-            --accent-color: #27ae60;
-            --danger-color: #c0392b;
-            --bg-color: #f4f6f7;
-            --white: #ffffff;
-        }
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-        }
-        body {
-            background-color: var(--bg-color);
-            color: #333;
-            padding: 10px;
-        }
-        .page {
-            max-width: 650px;
-            margin: 0 auto;
-            background: var(--white);
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h2, h3 {
-            color: var(--primary-color);
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        .card {
-            background: #f9fbfb;
-            border: 1px solid #dcdde1;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-        .form-group {
-            margin-bottom: 10px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 3px;
-            font-weight: bold;
-            font-size: 13px;
-        }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .row {
-            display: flex;
-            gap: 10px;
-        }
-        .row .form-group {
-            flex: 1;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        table, th, td {
-            border: 1px solid #333;
-        }
-        th, td {
-            padding: 7px;
-            text-align: center;
-            font-size: 12px;
-        }
-        th {
-            background-color: #eaecee;
-        }
-        .database-table {
-            overflow-x: auto;
-        }
-        .summary-box {
-            background: #e8f8f5;
-            border: 1px solid #27ae60;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: bold;
-            color: #27ae60;
-            margin-bottom: 15px;
-        }
-        .btn {
-            background-color: var(--accent-color);
-            color: var(--white);
-            border: none;
-            padding: 10px 15px;
-            font-size: 14px;
-            border-radius: 4px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 5px;
-        }
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-        .btn-secondary {
-            background-color: #2980b9;
-        }
-        .btn-warning {
-            background-color: #f39c12;
-            color: white;
-        }
-        .btn-info {
-            background-color: #8e44ad;
-            color: white;
-        }
+    --primary-color: #2c3e50;
+    --accent-color: #27ae60;
+    --danger-color: #c0392b;
+    --bg-color: #f4f6f7;
+    --white: #ffffff;
+}
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+body {
+    background-color: var(--bg-color);
+    color: #333;
+    padding: 10px;
+}
+.page {
+    max-width: 650px;
+    margin: 0 auto;
+    background: var(--white);
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+h2, h3 {
+    color: var(--primary-color);
+    margin-bottom: 12px;
+    text-align: center;
+}
+.card {
+    background: #f9fbfb;
+    border: 1px solid #dcdde1;
+    padding: 12px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+.form-group {
+    margin-bottom: 10px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 3px;
+    font-weight: bold;
+    font-size: 13px;
+}
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+.row {
+    display: flex;
+    gap: 10px;
+}
+.row .form-group {
+    flex: 1;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+table, th, td {
+    border: 1px solid #333;
+}
+th, td {
+    padding: 7px;
+    text-align: center;
+    font-size: 12px;
+}
+th {
+    background-color: #eaecee;
+}
+.database-table {
+    overflow-x: auto;
+}
+.summary-box {
+    background: #e8f8f5;
+    border: 1px solid #27ae60;
+    padding: 10px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #27ae60;
+    margin-bottom: 15px;
+}
+.btn {
+    background-color: var(--accent-color);
+    color: var(--white);
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 5px;
+}
+.btn-danger {
+    background-color: var(--danger-color);
+}
+.btn-secondary {
+    background-color: #2980b9;
+}
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+}
+.btn-info {
+    background-color: #8e44ad;
+    color: white;
+}
 
-        /* Hidden Receipt Template */
-        #hidden-receipt-container {
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-        }
-        .receipt-template {
-            width: 500px;
-            background: #ffffff;
-            padding: 20px;
-            color: #333;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-        }
-        .receipt-header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
-        }
-        .receipt-header h2 { font-size: 20px; color: #2c3e50; margin-bottom: 4px; }
-        .receipt-header h3 { font-size: 15px; color: #c0392b; margin-bottom: 4px; font-weight: bold; }
-        .receipt-header p { font-size: 12px; color: #555; }
-        .receipt-info {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-        .receipt-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        .receipt-table, .receipt-table th, .receipt-table td {
-            border: 1px solid #333;
-        }
-        .receipt-table th, .receipt-table td {
-            padding: 6px;
-            font-size: 12px;
-            text-align: center;
-        }
-        .receipt-table th { background-color: #eaecee; }
-        .receipt-totals {
-            float: right;
-            width: 65%;
-            font-size: 13px;
-            margin-bottom: 10px;
-        }
-        .receipt-total-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            font-weight: bold;
-            border-bottom: 1px solid #ddd;
-        }
-        .clearfix::after { content: ""; clear: both; display: table; }
+/* Hidden Receipt Template */
+#hidden-receipt-container {
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+}
+.receipt-template {
+    width: 500px;
+    background: #ffffff;
+    padding: 20px;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+.receipt-header {
+    text-align: center;
+    border-bottom: 2px solid #333;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+.receipt-header h2 { font-size: 20px; color: #2c3e50; margin-bottom: 4px; }
+.receipt-header h3 { font-size: 15px; color: #c0392b; margin-bottom: 4px; font-weight: bold; }
+.receipt-header p { font-size: 12px; color: #555; }
+.receipt-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+.receipt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+}
+.receipt-table, .receipt-table th, .receipt-table td {
+    border: 1px solid #333;
+}
+.receipt-table th, .receipt-table td {
+    padding: 6px;
+    font-size: 12px;
+    text-align: center;
+}
+.receipt-table th { background-color: #eaecee; }
+.receipt-totals {
+    float: right;
+    width: 65%;
+    font-size: 13px;
+    margin-bottom: 10px;
+}
+.receipt-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+}
+.clearfix::after { content: ""; clear: both; display: table; }
+    
     </style>
 </head>
 <body>
 
     <div class="page">
-        <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
+    <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
 
-        <!-- NEW RECOVERY SECTION: JSON FILE IMPORT -->
-        <div class="card" style="border-color: #8e44ad; background: #fdfefe;">
-            <h3 style="color: #8e44ad;">🔄 डाटा रिकभरी (JSON फाइल अपलोड गर्नुहोस्)</h3>
-            <div class="form-group">
-                <label>गुगल शीट वा ब्याकअपबाट डाउनलोड गरिएको JSON फाइल छान्नुहोस्:</label>
-                <input type="file" id="json-file-input" accept=".json" style="background: white; padding: 6px;">
-            </div>
-            <button class="btn btn-info" onclick="importJsonData()">📥 डाटा रिकभर (Restore) गर्नुहोस्</button>
+    <!-- NEW RECOVERY SECTION: JSON FILE IMPORT -->
+    <div class="card" style="border-color: #8e44ad; background: #fdfefe;">
+        <h3 style="color: #8e44ad;">🔄 डाटा रिकभरी (JSON फाइल अपलोड गर्नुहोस्)</h3>
+        <div class="form-group">
+            <label>गुगल शीट वा ब्याकअपबाट डाउनलोड गरिएको JSON फाइल छान्नुहोस्:</label>
+            <input type="file" id="json-file-input" accept=".json" style="background: white; padding: 6px;">
         </div>
-
-        <!-- SECTION 1: TURNOVER REPORT -->
-        <div class="card">
-            <h3>📈 कारोबार (Turnover) रिपोर्ट</h3>
-            <div class="row">
-                <div class="form-group">
-                    <label>अवधि छान्नुहोस्:</label>
-                    <select id="filter-period" onchange="toggleDateInputs()">
-                        <option value="all">सबै (All Time)</option>
-                        <option value="weekly">यो हप्ता (This Week)</option>
-                        <option value="monthly">यो महिना (This Month)</option>
-                        <option value="yearly">यो वर्ष (This Year)</option>
-                        <option value="custom">तاريخ छान्नुहोस् (Custom Range)</option>
-                    </select>
-                </div>
-            </div>
-            <div id="custom-date-box" class="row" style="display: none;">
-                <div class="form-group">
-                    <label>देखि (From):</label>
-                    <input type="date" id="date-from" onchange="calculateTurnover()">
-                </div>
-                <div class="form-group">
-                    <label>सम्म (To):</label>
-                    <input type="date" id="date-to" onchange="calculateTurnover()">
-                </div>
-            </div>
-            <div class="summary-box" id="turnover-display">
-                कुल कारोबार: रु 0.00
-            </div>
-        </div>
-
-        <!-- SECTION 2: SEARCH OPTIONS -->
-        <div class="card">
-            <h3>🔍 बिल, सामान वा ग्राहक खोज्नुहोस्</h3>
-            <div class="form-group">
-                <label>बिल नम्बर (Bill Number Search):</label>
-                <input type="text" id="search-billno" placeholder="जस्तै: 00001..." oninput="filterData()">
-            </div>
-            <div class="form-group">
-                <label>सामानको नाम (Item Sales Search):</label>
-                <input type="text" id="search-item" placeholder="जस्तै: चिनी, चामल..." oninput="filterData()">
-            </div>
-            <div class="form-group">
-                <label>ग्राहकको नाम (Customer Purchase History):</label>
-                <input type="text" id="search-customer" placeholder="ग्राहकको नाम..." oninput="filterData()">
-            </div>
-        </div>
-
-        <!-- SECTION 3: BILLS DATABASE TABLE -->
-        <h3>बिलहरूको सूची</h3>
-        <div class="database-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>बिल नं</th>
-                        <th>मिति</th>
-                        <th>ग्राहक</th>
-                        <th>कुल रकम</th>
-                        <th>कार्य</th>
-                    </tr>
-                </thead>
-                <tbody id="database-rows">
-                    <!-- Dynamic rows -->
-                </tbody>
-            </table>
-        </div>
-
-        <button class="btn btn-secondary" onclick="window.location.href='homepage.html'">⬅️ गृहपृष्ठमा फर्कनुहोस्</button>
+        <button class="btn btn-info" onclick="importJsonData()">📥 डाटा रिकभर (Restore) गर्नुहोस्</button>
     </div>
 
-    <!-- Hidden Container to render image snapshot -->
-    <div id="hidden-receipt-container"></div>
+    <!-- SECTION 1: TURNOVER REPORT -->
+    <div class="card">
+        <h3>📈 कारोबार (Turnover) रिपोर्ट</h3>
+        <div class="row">
+            <div class="form-group">
+                <label>अवधि छान्नुहोस्:</label>
+                <select id="filter-period" onchange="toggleDateInputs()">
+                    <option value="all">सबै (All Time)</option>
+                    <option value="weekly">यो हप्ता (This Week)</option>
+                    <option value="monthly">यो महिना (This Month)</option>
+                    <option value="yearly">यो वर्ष (This Year)</option>
+                    <option value="custom">तاريخ छान्नुहोस् (Custom Range)</option>
+                </select>
+            </div>
+        </div>
+        <div id="custom-date-box" class="row" style="display: none;">
+            <div class="form-group">
+                <label>देखि (From):</label>
+                <input type="date" id="date-from" onchange="calculateTurnover()">
+            </div>
+            <div class="form-group">
+                <label>सम्म (To):</label>
+                <input type="date" id="date-to" onchange="calculateTurnover()">
+            </div>
+        </div>
+        <div class="summary-box" id="turnover-display">
+            कुल कारोबार: रु 0.00
+        </div>
+    </div>
 
+    <!-- SECTION 2: SEARCH OPTIONS -->
+    <div class="card">
+        <h3>🔍 बिल, सामान वा ग्राहक खोज्नुहोस्</h3>
+        <div class="form-group">
+            <label>बिल नम्बर (Bill Number Search):</label>
+            <input type="text" id="search-billno" placeholder="जस्तै: 00001..." oninput="filterData()">
+        </div>
+        <div class="form-group">
+            <label>सामानको नाम (Item Sales Search):</label>
+            <input type="text" id="search-item" placeholder="जस्तै: चिनी, चामल..." oninput="filterData()">
+        </div>
+        <div class="form-group">
+            <label>ग्राहकको नाम (Customer Purchase History):</label>
+            <input type="text" id="search-customer" placeholder="ग्राहकको नाम..." oninput="filterData()">
+        </div>
+    </div>
+
+    <!-- SECTION 3: BILLS DATABASE TABLE -->
+    <h3>बिलहरूको सूची</h3>
+    <div class="database-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>बिल नं</th>
+                    <th>मिति</th>
+                    <th>ग्राहक</th>
+                    <th>कुल रकम</th>
+                    <th>कार्य</th>
+                </tr>
+            </thead>
+            <tbody id="database-rows">
+                <!-- Dynamic rows -->
+            </tbody>
+        </table>
+    </div>
+
+    <button class="btn btn-secondary" onclick="window.location.href='homepage.html'">⬅️ गृहपृष्ठमा फर्कनुहोस्</button>
+</div>
+
+<!-- Hidden Container to render image snapshot -->
+<div id="hidden-receipt-container"></div>
+    
     <script>
         const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzGs5KJV70vdpbpAO6qzxdHPtZAAyI_9Gs8KmLDmTHiflALdZ8A7Q7j_4q4vQ-shXya/exec";
 
-        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
 
-        // Function to import and recover JSON data into browser storage and app database
-        function importJsonData() {
-            const fileInput = document.getElementById('json-file-input');
-            if (fileInput.files.length === 0) {
-                alert('कृपया पहिले एउटा JSON फाइल छान्नुहोस्!');
-                return;
-            }
-
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(event) {
-                try {
-                    const importedData = JSON.parse(event.target.result);
-                    if (Array.isArray(importedData)) {
-                        // Merge or replace with existing bills securely
-                        billsDatabase = importedData;
-                        localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
-                        calculateTurnover();
-                        filterData();
-                        alert('डाटा सफलतापूर्वक रिकभर (Restore) भयो!');
-                    } else {
-                        alert('अमान्य फाइल ढाँचा! यो सहि बिल JSON डेटा होइन।');
-                    }
-                } catch (error) {
-                    alert('JSON फाइल पढ्दा त्रुटि भयो। कृपया सही फाइल छान्नुहोस्।');
-                    console.error(error);
-                }
-            };
-
-            reader.readAsText(file);
-        }
-
-        // Function to sync single bill to Google Sheets with offline queue handling
-        function syncBillToGoogleSheet(billData) {
-            fetch(GOOGLE_SHEET_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(billData)
-            }).then(() => {
-                console.log(`Bill ${billData.billNo} synced successfully.`);
-            }).catch(error => {
-                console.warn("Offline or sync failed. Queuing for later sync...", error);
-                saveToOfflineQueue(billData);
-            });
-        }
-
-        // Save failed sync items into a local storage queue
-        function saveToOfflineQueue(billData) {
-            let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
-            if (!queue.some(b => b.billNo === billData.billNo)) {
-                queue.push(billData);
-                localStorage.setItem('offline_sync_queue', JSON.stringify(queue));
-            }
-        }
-
-        // Process queue automatically when internet comes back online
-        window.addEventListener('online', processOfflineQueue);
-
-        function processOfflineQueue() {
-            let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
-            if (queue.length === 0) return;
-
-            console.log("Internet restored. Flushing offline sync queue...");
-            let remainingQueue = [];
-
-            queue.forEach(billData => {
-                fetch(GOOGLE_SHEET_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(billData)
-                }).then(() => {
-                    console.log(`Queued bill ${billData.billNo} synced successfully after reconnect.`);
-                }).catch(() => {
-                    remainingQueue.push(billData);
-                });
-            });
-
-            localStorage.setItem('offline_sync_queue', JSON.stringify(remainingQueue));
-        }
-
-        if (navigator.onLine) {
-            processOfflineQueue();
-        }
-
-        function toggleDateInputs() {
-            const period = document.getElementById('filter-period').value;
-            const customBox = document.getElementById('custom-date-box');
-            customBox.style.display = (period === 'custom') ? 'flex' : 'none';
-            calculateTurnover();
-            filterData();
-        }
-
-        function calculateTurnover() {
-            const period = document.getElementById('filter-period').value;
-            const now = new Date();
-            let total = 0;
-
-            billsDatabase.forEach(bill => {
-                const billDate = new Date(bill.date);
-                let include = false;
-
-                if (period === 'all') {
-                    include = true;
-                } else if (period === 'weekly') {
-                    const oneWeekAgo = new Date();
-                    oneWeekAgo.setDate(now.getDate() - 7);
-                    if (billDate >= oneWeekAgo && billDate <= now) include = true;
-                } else if (period === 'monthly') {
-                    if (billDate.getMonth() === now.getMonth() && billDate.getFullYear() === now.getFullYear()) include = true;
-                } else if (period === 'yearly') {
-                    if (billDate.getFullYear() === now.getFullYear()) include = true;
-                } else if (period === 'custom') {
-                    const from = document.getElementById('date-from').value;
-                    const to = document.getElementById('date-to').value;
-                    if (from && to && bill.date >= from && bill.date <= to) include = true;
-                }
-
-                if (include) {
-                    total += parseFloat(bill.grandTotal) || 0;
-                }
-            });
-
-            document.getElementById('turnover-display').textContent = `कुल कारोबार: रु ${total.toFixed(2)}`;
-        }
-
-        function filterData() {
-            const billNoQuery = document.getElementById('search-billno').value.toLowerCase().trim();
-            const itemQuery = document.getElementById('search-item').value.toLowerCase().trim();
-            const customerQuery = document.getElementById('search-customer').value.toLowerCase().trim();
-            const tbody = document.getElementById('database-rows');
-            tbody.innerHTML = '';
-
-            let filteredBills = billsDatabase.filter(bill => {
-                let matchesBillNo = (bill.billNo || '').toLowerCase().includes(billNoQuery);
-                let matchesCustomer = (bill.customerName || '').toLowerCase().includes(customerQuery);
-                let matchesItem = true;
-
-                if (itemQuery) {
-                    matchesItem = bill.items.some(item => (item.desc || '').toLowerCase().includes(itemQuery));
-                }
-
-                return matchesBillNo && matchesCustomer && matchesItem;
-            });
-
-            if (filteredBills.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5">कुनै पनि रेकर्ड फेला परेन।</td></tr>`;
-                return;
-            }
-
-            filteredBills.forEach((bill) => {
-                const originalIndex = billsDatabase.indexOf(bill);
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>${bill.billNo}</b></td>
-                    <td>${bill.date}</td>
-                    <td>${bill.customerName}</td>
-                    <td>रु ${bill.grandTotal}</td>
-                    <td>
-                        <button class="btn" style="background-color: #2980b9; padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%;" onclick="generateReceiptImage('${bill.billNo}')">📸 फोटो</button>
-                        <button class="btn btn-warning" style="padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%; border:none; border-radius:3px; cursor:pointer;" onclick="editBill(${originalIndex})">✏️ सम्पादन</button>
-                        <button class="btn-danger" style="padding: 4px 6px; font-size: 11px; border:none; border-radius:3px; color:white; cursor:pointer; width: 100%;" onclick="deleteBill(${originalIndex})">मेटाउने</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function deleteBill(index) {
-            if (confirm('के तपाईँ यो बिल मेटाउन चाहनुहुन्छ?')) {
-                billsDatabase.splice(index, 1);
+// Fetch live bills from Google Sheet on startup
+function fetchBillsFromGoogleSheet() {
+    fetch(GOOGLE_SHEET_URL)
+        .then(response => response.json())
+        .then(data => {
+            if (Array.isArray(data) && data.length > 0) {
+                billsDatabase = data;
                 localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
                 calculateTurnover();
                 filterData();
+                console.log("Bills successfully loaded from Google Sheet.");
             }
+        })
+        .catch(error => {
+            console.warn("Could not fetch live data from Google Sheet, using local storage fallback.", error);
+        });
+}
+
+// Trigger fetch on load
+fetchBillsFromGoogleSheet();
+
+// Function to import and recover JSON data into browser storage and app database
+function importJsonData() {
+    const fileInput = document.getElementById('json-file-input');
+    if (fileInput.files.length === 0) {
+        alert('कृपया पहिले एउटा JSON फाइल छान्नुहोस्!');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+        try {
+            const importedData = JSON.parse(event.target.result);
+            if (Array.isArray(importedData)) {
+                billsDatabase = importedData;
+                localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+                calculateTurnover();
+                filterData();
+                alert('डाटा सफलतापूर्वक रिकभर (Restore) भयो!');
+            } else {
+                alert('अमान्य फाइल ढाँचा! यो सहि बिल JSON डेटा होइन।');
+            }
+        } catch (error) {
+            alert('JSON फाइल पढ्दा त्रुटि भयो। कृपया सही फाइल छान्नुहोस्।');
+            console.error(error);
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+// Function to sync single bill to Google Sheets with offline queue handling
+function syncBillToGoogleSheet(billData) {
+    fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(billData)
+    }).then(() => {
+        console.log(`Bill ${billData.billNo} synced successfully.`);
+    }).catch(error => {
+        console.warn("Offline or sync failed. Queuing for later sync...", error);
+        saveToOfflineQueue(billData);
+    });
+}
+
+function saveToOfflineQueue(billData) {
+    let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
+    if (!queue.some(b => b.billNo === billData.billNo)) {
+        queue.push(billData);
+        localStorage.setItem('offline_sync_queue', JSON.stringify(queue));
+    }
+}
+
+window.addEventListener('online', processOfflineQueue);
+
+function processOfflineQueue() {
+    let queue = JSON.parse(localStorage.getItem('offline_sync_queue')) || [];
+    if (queue.length === 0) return;
+
+    let remainingQueue = [];
+
+    queue.forEach(billData => {
+        fetch(GOOGLE_SHEET_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(billData)
+        }).then(() => {
+            console.log(`Queued bill ${billData.billNo} synced successfully after reconnect.`);
+        }).catch(() => {
+            remainingQueue.push(billData);
+        });
+    });
+
+    localStorage.setItem('offline_sync_queue', JSON.stringify(remainingQueue));
+}
+
+if (navigator.onLine) {
+    processOfflineQueue();
+}
+
+function toggleDateInputs() {
+    const period = document.getElementById('filter-period').value;
+    const customBox = document.getElementById('custom-date-box');
+    customBox.style.display = (period === 'custom') ? 'flex' : 'none';
+    calculateTurnover();
+    filterData();
+}
+
+function calculateTurnover() {
+    const period = document.getElementById('filter-period').value;
+    const now = new Date();
+    let total = 0;
+
+    billsDatabase.forEach(bill => {
+        const billDate = new Date(bill.date);
+        let include = false;
+
+        if (period === 'all') {
+            include = true;
+        } else if (period === 'weekly') {
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(now.getDate() - 7);
+            if (billDate >= oneWeekAgo && billDate <= now) include = true;
+        } else if (period === 'monthly') {
+            if (billDate.getMonth() === now.getMonth() && billDate.getFullYear() === now.getFullYear()) include = true;
+        } else if (period === 'yearly') {
+            if (billDate.getFullYear() === now.getFullYear()) include = true;
+        } else if (period === 'custom') {
+            const from = document.getElementById('date-from').value;
+            const to = document.getElementById('date-to').value;
+            if (from && to && bill.date >= from && bill.date <= to) include = true;
         }
 
-        function editBill(index) {
-            const bill = billsDatabase[index];
-            localStorage.setItem('edit_bill_data', JSON.stringify(bill));
-            billsDatabase.splice(index, 1);
-            localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
-            
-            alert('यो बिल सम्पादनको लागि गृहपृष्ठमा पठाइयो।');
-            window.location.href = 'homepage.html';
+        if (include) {
+            total += parseFloat(bill.grandTotal) || 0;
+        }
+    });
+
+    document.getElementById('turnover-display').textContent = `कुल कारोबार: रु ${total.toFixed(2)}`;
+}
+
+function filterData() {
+    const billNoQuery = document.getElementById('search-billno').value.toLowerCase().trim();
+    const itemQuery = document.getElementById('search-item').value.toLowerCase().trim();
+    const customerQuery = document.getElementById('search-customer').value.toLowerCase().trim();
+    const tbody = document.getElementById('database-rows');
+    tbody.innerHTML = '';
+
+    let filteredBills = billsDatabase.filter(bill => {
+        let matchesBillNo = (bill.billNo || '').toLowerCase().includes(billNoQuery);
+        let matchesCustomer = (bill.customerName || '').toLowerCase().includes(customerQuery);
+        let matchesItem = true;
+
+        if (itemQuery && bill.items) {
+            matchesItem = bill.items.some(item => (item.desc || '').toLowerCase().includes(itemQuery));
         }
 
-        function generateReceiptImage(billNo) {
-            const bill = billsDatabase.find(b => b.billNo === billNo);
-            if (!bill) return;
+        return matchesBillNo && matchesCustomer && matchesItem;
+    });
 
-            syncBillToGoogleSheet(bill);
+    if (filteredBills.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5">कुनै पनि रेकर्ड फेला परेन।</td></tr>`;
+        return;
+    }
 
-            const container = document.getElementById('hidden-receipt-container');
-            
-            let itemsHtml = '';
-            let subTotalCalc = 0;
-            bill.items.forEach((item, i) => {
-                const amt = parseFloat(item.amount) || (parseFloat(item.qty || 0) * parseFloat(item.rate || 0));
-                subTotalCalc += amt;
-                itemsHtml += `
+    filteredBills.forEach((bill) => {
+        const originalIndex = billsDatabase.indexOf(bill);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><b>${bill.billNo}</b></td>
+            <td>${bill.date}</td>
+            <td>${bill.customerName}</td>
+            <td>रु ${bill.grandTotal}</td>
+            <td>
+                <button class="btn" style="background-color: #2980b9; padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%;" onclick="generateReceiptImage('${bill.billNo}')">📸 फोटो</button>
+                <button class="btn btn-warning" style="padding: 4px 6px; font-size: 11px; margin-bottom: 2px; width: 100%; border:none; border-radius:3px; cursor:pointer;" onclick="editBill(${originalIndex})">✏️ सम्पादन</button>
+                <button class="btn-danger" style="padding: 4px 6px; font-size: 11px; border:none; border-radius:3px; color:white; cursor:pointer; width: 100%;" onclick="deleteBill(${originalIndex})">मेटाउने</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteBill(index) {
+    if (confirm('के तपाईँ यो बिल मेटाउन चाहनुहुन्छ?')) {
+        billsDatabase.splice(index, 1);
+        localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+        calculateTurnover();
+        filterData();
+    }
+}
+
+function editBill(index) {
+    const bill = billsDatabase[index];
+    localStorage.setItem('edit_bill_data', JSON.stringify(bill));
+    billsDatabase.splice(index, 1);
+    localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+    
+    alert('यो बिल सम्पादनको लागि गृहपृष्ठमा पठाइयो।');
+    window.location.href = 'homepage.html';
+}
+
+function generateReceiptImage(billNo) {
+    const bill = billsDatabase.find(b => b.billNo === billNo);
+    if (!bill) return;
+
+    syncBillToGoogleSheet(bill);
+
+    const container = document.getElementById('hidden-receipt-container');
+    
+    let itemsHtml = '';
+    let subTotalCalc = 0;
+    if (bill.items) {
+        bill.items.forEach((item, i) => {
+            const amt = parseFloat(item.amount) || (parseFloat(item.qty || 0) * parseFloat(item.rate || 0));
+            subTotalCalc += amt;
+            itemsHtml += `
+                <tr>
+                    <td>${i+1}</td>
+                    <td style="text-align: left; padding-left: 6px;">${item.desc}</td>
+                    <td>${item.qty}</td>
+                    <td>${item.rate}</td>
+                    <td>${amt.toFixed(2)}</td>
+                </tr>
+            `;
+        });
+    }
+
+    const subTotal = subTotalCalc.toFixed(2);
+    const grandTotalVal = parseFloat(bill.grandTotal) || subTotalCalc;
+    const computedDiscount = Math.max(0, subTotalCalc - grandTotalVal).toFixed(2);
+
+    container.innerHTML = `
+        <div class="receipt-template" id="capture-receipt">
+            <div class="receipt-header">
+                <h2>मञ्जला किराना पसल</h2>
+                <h3>पान रसीद (PAN BILL)</h3>
+                <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
+                <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
+            </div>
+            <div class="receipt-info">
+                <div><b>बिल नं:</b> ${bill.billNo}</div>
+                <div><b>मिति:</b> ${bill.date}</div>
+            </div>
+            <div style="font-size: 13px; margin-bottom: 8px;">
+                <div><b>ग्राहकको नाम:</b> ${bill.customerName}</div>
+                <div><b>ठेगाना:</b> ${bill.customerAddress}</div>
+            </div>
+            <table class="receipt-table">
+                <thead>
                     <tr>
-                        <td>${i+1}</td>
-                        <td style="text-align: left; padding-left: 6px;">${item.desc}</td>
-                        <td>${item.qty}</td>
-                        <td>${item.rate}</td>
-                        <td>${amt.toFixed(2)}</td>
+                        <th>क्र.सं.</th>
+                        <th>विवरण</th>
+                        <th>परिमाण</th>
+                        <th>दर (रु)</th>
+                        <th>जम्मा (रु)</th>
                     </tr>
-                `;
-            });
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                </tbody>
+            </table>
+            <div class="receipt-totals">
+                <div class="receipt-total-row"><span>उप-कुल (Subtotal):</span> <span>रु ${subTotal}</span></div>
+                <div class="receipt-total-row"><span>छूट (Discount):</span> <span>रु ${computedDiscount}</span></div>
+                <div class="receipt-total-row" style="font-size: 15px; border-top: 2px solid #333;"><span>कुल योग (Grand Total):</span> <span>रु ${grandTotalVal.toFixed(2)}</span></div>
+            </div>
+            <div class="clearfix"></div>
+            <div style="text-align: center; margin-top: 15px; font-size: 12px;">
+                <p>धन्यवाद! फेरी पाल्नुहोला।</p>
+            </div>
+        </div>
+    `;
 
-            const subTotal = subTotalCalc.toFixed(2);
-            const grandTotalVal = parseFloat(bill.grandTotal) || subTotalCalc;
-            const computedDiscount = Math.max(0, subTotalCalc - grandTotalVal).toFixed(2);
-
-            container.innerHTML = `
-                <div class="receipt-template" id="capture-receipt">
-                    <div class="receipt-header">
-                        <h2>मञ्जला किराना पसल</h2>
-                        <h3>पान रसीद (PAN BILL)</h3>
-                        <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
-                        <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
-                    </div>
-                    <div class="receipt-info">
-                        <div><b>बिल नं:</b> ${bill.billNo}</div>
-                        <div><b>मिति:</b> ${bill.date}</div>
-                    </div>
-                    <div style="font-size: 13px; margin-bottom: 8px;">
-                        <div><b>ग्राहकको नाम:</b> ${bill.customerName}</div>
-                        <div><b>ठेगाना:</b> ${bill.customerAddress}</div>
-                    </div>
-                    <table class="receipt-table">
-                        <thead>
+    setTimeout(() => {
+        html2canvas(document.getElementById('capture-receipt')).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Bill_${bill.billNo}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            container.innerHTML = '';
+        }).catch(err => {
+            console.error("Error generating receipt image:", err);
+            container.innerHTML = '';
+        });
+    }, 300);
+    }
+        
+    </script>
+</body>
+</html>
