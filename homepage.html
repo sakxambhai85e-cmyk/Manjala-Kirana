@@ -303,9 +303,25 @@
     <!-- Firebase SDK & Logic -->
     <script type="module">
 
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+                                import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
+const firebaseConfig = {
+    apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
+    authDomain: "karobarapp-950e8.firebaseapp.com",
+    projectId: "karobarapp-950e8",
+    storageBucket: "karobarapp-950e8.firebasestorage.app",
+    messagingSenderId: "590048865310",
+    appId: "1:590048865310:web:af35ec728e1829254920f"
+};
+
+// 1. Initialize Firebase App First
+const app = initializeApp(firebaseConfig);
+
+// 2. Setup Auth & Firestore using initialized app instance
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Check if user is authenticated; if not, kick them back to login page
 onAuthStateChanged(auth, (user) => {
@@ -313,248 +329,86 @@ onAuthStateChanged(auth, (user) => {
         window.location.href = 'index.html';
     }
 });
-        
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
-            authDomain: "karobarapp-950e8.firebaseapp.com",
-            projectId: "karobarapp-950e8",
-            storageBucket: "karobarapp-950e8.firebasestorage.app",
-            messagingSenderId: "590048865310",
-            appId: "1:590048865310:web:af35ec728e1829254920f"
-        };
+document.getElementById('bill-date').valueAsDate = new Date();
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        document.getElementById('bill-date').valueAsDate = new Date();
-
-        async function initFirebaseSync() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "bills"));
-                let fetchedBills = [];
-                querySnapshot.forEach((document) => {
-                    fetchedBills.push(document.data());
-                });
-
-                localStorage.setItem('karobar_bills', JSON.stringify(fetchedBills));
-                const nextNum = fetchedBills.length + 1;
-                document.getElementById('display-bill-no').textContent = String(nextNum).padStart(6, '0');
-            } catch (error) {
-                let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-                const nextNum = localBills.length + 1;
-                document.getElementById('display-bill-no').textContent = String(nextNum).padStart(6, '0');
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            initFirebaseSync();
+async function initFirebaseSync() {
+    try {
+        const querySnapshot = await getDocs(collection(db, "bills"));
+        let fetchedBills = [];
+        querySnapshot.forEach((document) => {
+            fetchedBills.push(document.data());
         });
 
-        window.saveBill = async function() {
-            try {
-                const billNo = document.getElementById('display-bill-no').textContent;
-                const date = document.getElementById('bill-date').value;
-                const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
-                const customerAddress = document.getElementById('customer-address').value || '-';
-                const customerEmail = document.getElementById('customer-email').value || '';
-                const grandTotal = document.getElementById('grand-total').textContent;
+        localStorage.setItem('karobar_bills', JSON.stringify(fetchedBills));
+        const nextNum = fetchedBills.length + 1;
+        document.getElementById('display-bill-no').textContent = String(nextNum).padStart(6, '0');
+    } catch (error) {
+        let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+        const nextNum = localBills.length + 1;
+        document.getElementById('display-bill-no').textContent = String(nextNum).padStart(6, '0');
+    }
+}
 
-                const rows = document.querySelectorAll('#items-body tr');
-                let items = [];
-                rows.forEach(row => {
-                    items.push({
-                        desc: row.querySelector('.item-desc').value || 'सामान',
-                        qty: row.querySelector('.item-qty').value || '0',
-                        rate: row.querySelector('.item-rate').value || '0',
-                        amount: row.querySelector('.item-amount').textContent || '0.00'
-                    });
-                });
+window.addEventListener('DOMContentLoaded', () => {
+    initFirebaseSync();
+});
 
-                const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
-                
-                let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-                localBills.push(billData);
-                localStorage.setItem('karobar_bills', JSON.stringify(localBills));
+window.saveBill = async function() {
+    try {
+        const billNo = document.getElementById('display-bill-no').textContent;
+        const date = document.getElementById('bill-date').value;
+        const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+        const customerAddress = document.getElementById('customer-address').value || '-';
+        const customerEmail = document.getElementById('customer-email').value || '';
+        const grandTotal = document.getElementById('grand-total').textContent;
 
-                await setDoc(doc(db, "bills", String(billNo)), billData);
-
-                window.billGenerated = true;
-                document.getElementById('btn-img').removeAttribute('disabled');
-                document.getElementById('btn-whatsapp').removeAttribute('disabled');
-                document.getElementById('btn-email').removeAttribute('disabled');
-                document.getElementById('btn-save').setAttribute('disabled', 'true');
-
-                alert('बिल सफलतापूर्वक सेभ र Firebase मा सिंक भयो!');
-
-            } catch (err) {
-                console.error("Error saving bill:", err);
-                alert('बिल सेभ भयो तर क्लाउड सिंक असफल भयो। (Local Save OK)');
-                window.billGenerated = true;
-                document.getElementById('btn-img').removeAttribute('disabled');
-                document.getElementById('btn-whatsapp').removeAttribute('disabled');
-                document.getElementById('btn-email').removeAttribute('disabled');
-                document.getElementById('btn-save').setAttribute('disabled', 'true');
-            }
-        };
-    </script>
-
-    <script>
-        window.billGenerated = false;
-
-        function addRow() {
-            const tbody = document.getElementById('items-body');
-            const rowCount = tbody.rows.length + 1;
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${rowCount}</td>
-                <td><input type="text" class="table-input item-desc" placeholder="सामानको नाम" style="text-align: left; padding-left: 6px;"></td>
-                <td><input type="number" class="table-input item-qty" placeholder="" oninput="calculateTotals()"></td>
-                <td><input type="number" class="table-input item-rate" placeholder="" oninput="calculateTotals()"></td>
-                <td class="item-amount">0.00</td>
-            `;
-            tbody.appendChild(tr);
-        }
-
-        function calculateTotals() {
-            const rows = document.querySelectorAll('#items-body tr');
-            let subTotal = 0;
-
-            rows.forEach(row => {
-                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
-                const amount = qty * rate;
-                row.querySelector('.item-amount').textContent = amount.toFixed(2);
-                subTotal += amount;
+        const rows = document.querySelectorAll('#items-body tr');
+        let items = [];
+        rows.forEach(row => {
+            items.push({
+                desc: row.querySelector('.item-desc').value || 'सामान',
+                qty: row.querySelector('.item-qty').value || '0',
+                rate: row.querySelector('.item-rate').value || '0',
+                amount: row.querySelector('.item-amount').textContent || '0.00'
             });
+        });
 
-            document.getElementById('sub-total').textContent = subTotal.toFixed(2);
-            const discount = parseFloat(document.getElementById('discount').value) || 0;
-            const grandTotal = subTotal - discount;
-            document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
-        }
+        const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
+        
+        let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+        localBills.push(billData);
+        localStorage.setItem('karobar_bills', JSON.stringify(localBills));
 
-        function populateHiddenReceipt() {
-            document.getElementById('img-out-billno').textContent = document.getElementById('display-bill-no').textContent;
-            document.getElementById('img-out-date').textContent = document.getElementById('bill-date').value;
-            document.getElementById('img-out-name').textContent = document.getElementById('customer-name').value || 'साधारण ग्राहक';
-            document.getElementById('img-out-addr').textContent = document.getElementById('customer-address').value || '-';
-            
-            const tbody = document.getElementById('img-out-tbody');
-            tbody.innerHTML = '';
-            document.querySelectorAll('#items-body tr').forEach((row, i) => {
-                const desc = row.querySelector('.item-desc').value || 'सामान';
-                const qty = row.querySelector('.item-qty').value || '0';
-                const rate = row.querySelector('.item-rate').value || '0';
-                const amt = row.querySelector('.item-amount').textContent || '0.00';
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${i+1}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: left; padding-left: 6px;">${desc}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${qty}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${rate}</td>
-                        <td style="border: 1px solid #000; padding: 4px; text-align: right; padding-right: 6px;">${amt}</td>
-                    </tr>
-                `;
-            });
+        await setDoc(doc(db, "bills", String(billNo)), billData);
 
-            document.getElementById('img-out-sub').textContent = document.getElementById('sub-total').textContent;
-            document.getElementById('img-out-disc').textContent = document.getElementById('discount').value || '0.00';
-            document.getElementById('img-out-grand').textContent = document.getElementById('grand-total').textContent;
-        }
+        window.billGenerated = true;
+        document.getElementById('btn-img').removeAttribute('disabled');
+        document.getElementById('btn-whatsapp').removeAttribute('disabled');
+        document.getElementById('btn-email').removeAttribute('disabled');
+        document.getElementById('btn-save').setAttribute('disabled', 'true');
 
-        function downloadImage() {
-            if (!window.billGenerated) {
-                alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
-                return;
-            }
-            populateHiddenReceipt();
-            const receiptTemplate = document.getElementById('hidden-receipt-template');
-            
-            html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
-                link.href = canvas.toDataURL('image/jpeg');
-                link.click();
-            });
-        }
+        alert('बिल सफलतापूर्वक सेभ र Firebase मा सिंक भयो!');
 
-        function generateBillText() {
-            const billNo = document.getElementById('display-bill-no').textContent;
-            const date = document.getElementById('bill-date').value;
-            const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
-            const customerAddress = document.getElementById('customer-address').value || '-';
-            const subTotal = document.getElementById('sub-total').textContent;
-            const discount = document.getElementById('discount').value || '0';
-            const grandTotal = document.getElementById('grand-total').textContent;
-
-            let text = `🛒 *मञ्जला किराना पसल*\n`;
-            text += `पान रसीद (PAN BILL)\n`;
-            text += `शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ\n`;
-            text += `PAN: ६२४४१६०७०\n`;
-            text += `-----------------------------------\n`;
-            text += `बिल नं: ${billNo}\n`;
-            text += `मिति: ${date}\n`;
-            text += `ग्राहक: ${customerName}\n`;
-            text += `ठेगाना: ${customerAddress}\n`;
-            text += `-----------------------------------\n`;
-            text += `*सामानको विवरण:*\n`;
-
-            document.querySelectorAll('#items-body tr').forEach((row, i) => {
-                const desc = row.querySelector('.item-desc').value || 'सामान';
-                const qty = row.querySelector('.item-qty').value || '0';
-                const rate = row.querySelector('.item-rate').value || '0';
-                const amt = row.querySelector('.item-amount').textContent || '0.00';
-                text += `${i+1}. ${desc} | ${qty} x ${rate} = रु ${amt}\n`;
-            });
-
-            text += `-----------------------------------\n`;
-            text += `जम्मा: रु ${subTotal}\n`;
-            text += `छुट: रु ${discount}\n`;
-            text += `*कुल जम्मा: रु ${grandTotal}*\n`;
-            text += `-----------------------------------\n`;
-            text += `धन्यवाद! फेरी आउनुहोला।`;
-
-            return text;
-        }
-
-        function shareWhatsApp() {
-            if (!window.billGenerated) {
-                alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
-                return;
-            }
-            if (document.getElementById('download-with-share').checked) {
-                downloadImage();
-            }
-            const text = encodeURIComponent(generateBillText());
-            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
-        }
-
-        function sendEmail() {
-            if (!window.billGenerated) {
-                alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
-                return;
-            }
-            if (document.getElementById('download-with-share').checked) {
-                downloadImage();
-            }
-            const email = document.getElementById('customer-email').value || '';
-            const billNo = document.getElementById('display-bill-no').textContent;
-            const subject = encodeURIComponent(`मञ्जला किराना पसल - बिल नं ${billNo}`);
-            const body = encodeURIComponent(generateBillText());
-            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-        }
-
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+    } catch (err) {
+        console.error("Error saving bill:", err);
+        alert('बिल सेभ भयो तर क्लाउड सिंक असफल भयो। (Local Save OK)');
+        window.billGenerated = true;
+        document.getElementById('btn-img').removeAttribute('disabled');
+        document.getElementById('btn-whatsapp').removeAttribute('disabled');
+        document.getElementById('btn-email').removeAttribute('disabled');
+        document.getElementById('btn-save').setAttribute('disabled', 'true');
+    }
+};
 
 window.handleLogout = function() {
-    const auth = getAuth();
     signOut(auth).then(() => {
         window.location.href = 'index.html';
+    }).catch((error) => {
+        console.error("Logout error: ", error);
     });
-                }
+};
+        
         
     </script>
 </body>
