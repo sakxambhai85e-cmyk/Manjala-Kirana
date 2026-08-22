@@ -32,6 +32,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
         }
         .header-box {
             text-align: center;
@@ -135,23 +136,14 @@
             background-color: #bdc3c7;
             cursor: not-allowed;
         }
-        .btn-danger {
-            background-color: var(--danger-color);
-        }
-        .btn-secondary {
-            background-color: #2980b9;
-        }
-        .btn-whatsapp {
-            background-color: #25D366;
-        }
-        .btn-email {
-            background-color: #e67e22;
-        }
+        .btn-danger { background-color: var(--danger-color); }
+        .btn-secondary { background-color: #2980b9; }
+        .btn-whatsapp { background-color: #25D366; }
+        .btn-email { background-color: #e67e22; }
         .actions-bar {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-top: 15px;
         }
         .checkbox-container {
             display: flex;
@@ -161,12 +153,24 @@
             margin-top: 6px;
             cursor: pointer;
         }
+
+        /* Hidden clean receipt layout specifically formatted for image download output */
+        #hidden-receipt-template {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 550px;
+            background: #ffffff;
+            padding: 30px;
+            color: #000;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Printable Bill Receipt Area -->
-    <div class="page" id="bill-receipt">
+    <!-- Main Input Form Page -->
+    <div class="page">
         <div class="header-box">
             <h1>मञ्जला किराना पसल</h1>
             <h3>पान रसीद (PAN BILL)</h3>
@@ -213,7 +217,7 @@
                 </tr>
             </tbody>
         </table>
-        <button class="btn btn-secondary no-print" style="padding: 6px; font-size: 13px; margin-bottom: 15px;" onclick="addRow()">+ अर्को सामान थप्नुहोस्</button>
+        <button class="btn btn-secondary" style="padding: 6px; font-size: 13px; margin-bottom: 15px;" onclick="addRow()">+ अर्को सामान थप्नुहोस्</button>
 
         <div class="clearfix">
             <div class="totals-section">
@@ -233,8 +237,8 @@
         </div>
     </div>
 
-    <!-- Action Buttons Bar Outside Receipt Container -->
-    <div class="page" style="margin-top: 15px; background: transparent; box-shadow: none; padding: 0;">
+    <!-- Action Buttons Bar -->
+    <div class="page" style="background: transparent; box-shadow: none; padding: 0;">
         <div class="actions-bar">
             <button class="btn" id="btn-save" onclick="saveBill()">💾 सेभ र बिल बनाउनुहोस्</button>
             <button class="btn btn-secondary" id="btn-img" onclick="downloadImage()" disabled>📥 बिलको फोटो डाउनलोड गर्नुहोस्</button>
@@ -250,7 +254,53 @@
         </div>
     </div>
 
-    <!-- Firebase SDK & Sync Logic -->
+    <!-- Clean Structured Template for Image Export (Matches Database/Receipt style) -->
+    <div id="hidden-receipt-template">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+            <h2 style="font-size: 20px; color: #2c3e50; margin-bottom: 2px;">मञ्जला किराना पसल</h2>
+            <h4 style="font-size: 14px; color: #c0392b; margin-bottom: 2px;">पान रसीद (PAN BILL)</h4>
+            <p style="font-size: 11px; color: #333;">शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
+            <p style="font-size: 11px; color: #333;">स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px;">
+            <div><b>बिल नं:</b> <span id="img-out-billno">000001</span></div>
+            <div><b>मिति:</b> <span id="img-out-date"></span></div>
+        </div>
+        <div style="font-size: 12px; margin-bottom: 12px;">
+            <div><b>ग्राहकको नाम:</b> <span id="img-out-name">साधारण ग्राहक</span></div>
+            <div><b>ठेगाना:</b> <span id="img-out-addr">-</span></div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
+            <thead>
+                <tr style="background: #eee;">
+                    <th style="border: 1px solid #000; padding: 4px;">सि.नं.</th>
+                    <th style="border: 1px solid #000; padding: 4px;">विवरण</th>
+                    <th style="border: 1px solid #000; padding: 4px;">परिमाण</th>
+                    <th style="border: 1px solid #000; padding: 4px;">दर</th>
+                    <th style="border: 1px solid #000; padding: 4px;">रकम</th>
+                </tr>
+            </thead>
+            <tbody id="img-out-tbody">
+                <!-- Dynamic Items -->
+            </tbody>
+        </table>
+        <div style="float: right; width: 55%; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ddd;">
+                <span>जम्मा (Total):</span> <span id="img-out-sub">0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ddd;">
+                <span>छुट (Discount):</span> <span id="img-out-disc">0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 4px 0; font-weight: bold; border-top: 2px solid #000;">
+                <span>कुल जम्मा:</span> <span id="img-out-grand">0.00</span>
+            </div>
+        </div>
+        <div style="clear: both; text-align: center; margin-top: 30px; font-size: 11px; color: #555;">
+            धन्यवाद! फेरी आउनुहोला।
+        </div>
+    </div>
+
+    <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
@@ -281,7 +331,6 @@
                 const nextNum = fetchedBills.length + 1;
                 document.getElementById('display-bill-no').textContent = String(nextNum).padStart(6, '0');
             } catch (error) {
-                console.warn("Offline mode active:", error);
                 let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
                 const nextNum = localBills.length + 1;
                 document.getElementById('display-bill-no').textContent = String(nextNum).padStart(6, '0');
@@ -314,12 +363,10 @@
 
                 const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
                 
-                // Save locally first for instant UI response
                 let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
                 localBills.push(billData);
                 localStorage.setItem('karobar_bills', JSON.stringify(localBills));
 
-                // Save to Firebase Firestore
                 await setDoc(doc(db, "bills", String(billNo)), billData);
 
                 window.billGenerated = true;
@@ -332,7 +379,7 @@
 
             } catch (err) {
                 console.error("Error saving bill:", err);
-                alert('बिल सेभ भयो तर नेटवर्क समस्याले क्लाउडमा गएन। (Local Save OK)');
+                alert('बिल सेभ भयो तर क्लाउड सिंक असफल भयो। (Local Save OK)');
                 window.billGenerated = true;
                 document.getElementById('btn-img').removeAttribute('disabled');
                 document.getElementById('btn-whatsapp').removeAttribute('disabled');
@@ -377,13 +424,44 @@
             document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
         }
 
+        function populateHiddenReceipt() {
+            document.getElementById('img-out-billno').textContent = document.getElementById('display-bill-no').textContent;
+            document.getElementById('img-out-date').textContent = document.getElementById('bill-date').value;
+            document.getElementById('img-out-name').textContent = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+            document.getElementById('img-out-addr').textContent = document.getElementById('customer-address').value || '-';
+            
+            const tbody = document.getElementById('img-out-tbody');
+            tbody.innerHTML = '';
+            document.querySelectorAll('#items-body tr').forEach((row, i) => {
+                const desc = row.querySelector('.item-desc').value || 'सामान';
+                const qty = row.querySelector('.item-qty').value || '0';
+                const rate = row.querySelector('.item-rate').value || '0';
+                const amt = row.querySelector('.item-amount').textContent || '0.00';
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${i+1}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: left; padding-left: 6px;">${desc}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${qty}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${rate}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: right; padding-right: 6px;">${amt}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('img-out-sub').textContent = document.getElementById('sub-total').textContent;
+            document.getElementById('img-out-disc').textContent = document.getElementById('discount').value || '0.00';
+            document.getElementById('img-out-grand').textContent = document.getElementById('grand-total').textContent;
+        }
+
         function downloadImage() {
             if (!window.billGenerated) {
                 alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
                 return;
             }
-            const receipt = document.getElementById('bill-receipt');
-            html2canvas(receipt, { scale: 2 }).then(canvas => {
+            populateHiddenReceipt();
+            const receiptTemplate = document.getElementById('hidden-receipt-template');
+            
+            html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
                 link.href = canvas.toDataURL('image/jpeg');
@@ -412,9 +490,7 @@
             text += `-----------------------------------\n`;
             text += `*सामानको विवरण:*\n`;
 
-            document.querySelectorAll('#items-body tr').rows.forEach?.() // safe fallback
-            const rows = document.querySelectorAll('#items-body tr');
-            rows.forEach((row, i) => {
+            document.querySelectorAll('#items-body tr').forEach((row, i) => {
                 const desc = row.querySelector('.item-desc').value || 'सामान';
                 const qty = row.querySelector('.item-qty').value || '0';
                 const rate = row.querySelector('.item-rate').value || '0';
@@ -441,7 +517,7 @@
                 downloadImage();
             }
             const text = encodeURIComponent(generateBillText());
-            window.open(`https://wa.me/?text=${text}`, '_blank');
+            window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
         }
 
         function sendEmail() {
@@ -452,7 +528,7 @@
             if (document.getElementById('download-with-share').checked) {
                 downloadImage();
             }
-            const email = document.getElementById('customer-email').value;
+            const email = document.getElementById('customer-email').value || '';
             const billNo = document.getElementById('display-bill-no').textContent;
             const subject = encodeURIComponent(`मञ्जला किराना पसल - बिल नं ${billNo}`);
             const body = encodeURIComponent(generateBillText());
@@ -460,5 +536,4 @@
         }
     </script>
 </body>
-                     </html>
-                
+</html>
