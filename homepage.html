@@ -302,6 +302,18 @@
 
     <!-- Firebase SDK & Logic -->
     <script type="module">
+
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+const auth = getAuth(app);
+
+// Check if user is authenticated; if not, kick them back to login page
+onAuthStateChanged(auth, (user) => {
+    if (!user) {
+        window.location.href = 'index.html';
+    }
+});
+        
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getFirestore, collection, getDocs, setDoc, doc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
@@ -534,6 +546,16 @@
             const body = encodeURIComponent(generateBillText());
             window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
         }
+
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+
+window.handleLogout = function() {
+    const auth = getAuth();
+    signOut(auth).then(() => {
+        window.location.href = 'index.html';
+    });
+                }
+        
     </script>
 </body>
 </html>
