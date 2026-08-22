@@ -6,344 +6,421 @@
     <title>मञ्जला किराना पसल - रिपोर्ट तथा डाटाबेस</title>
     <!-- html2canvas Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <style>
+        <style>
         :root {
-    --primary-color: #2c3e50;
-    --accent-color: #27ae60;
-    --danger-color: #c0392b;
-    --bg-color: #f4f6f7;
-    --white: #ffffff;
-}
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-}
-body {
-    background-color: var(--bg-color);
-    color: #333;
-    padding: 10px;
-}
-.page {
-    max-width: 650px;
-    margin: 0 auto;
-    background: var(--white);
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-h2, h3 {
-    color: var(--primary-color);
-    margin-bottom: 12px;
-    text-align: center;
-}
-.card {
-    background: #f9fbfb;
-    border: 1px solid #dcdde1;
-    padding: 12px;
-    border-radius: 6px;
-    margin-bottom: 15px;
-}
-.form-group {
-    margin-bottom: 10px;
-}
-.form-group label {
-    display: block;
-    margin-bottom: 3px;
-    font-weight: bold;
-    font-size: 13px;
-}
-.form-group input, .form-group select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 14px;
-}
-.row {
-    display: flex;
-    gap: 10px;
-}
-.row .form-group {
-    flex: 1;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-}
-table, th, td {
-    border: 1px solid #333;
-}
-th, td {
-    padding: 7px;
-    text-align: center;
-    font-size: 12px;
-}
-th {
-    background-color: #eaecee;
-}
-.database-table {
-    overflow-x: auto;
-}
-.summary-box {
-    background: #e8f8f5;
-    border: 1px solid #27ae60;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    color: #27ae60;
-    margin-bottom: 15px;
-}
-.btn {
-    background-color: var(--accent-color);
-    color: var(--white);
-    border: none;
-    padding: 10px 15px;
-    font-size: 14px;
-    border-radius: 4px;
-    cursor: pointer;
-    width: 100%;
-    margin-top: 5px;
-}
-.btn-danger {
-    background-color: var(--danger-color);
-}
-.btn-secondary {
-    background-color: #2980b9;
-}
-.btn-warning {
-    background-color: #f39c12;
-    color: white;
-}
-.btn-info {
-    background-color: #8e44ad;
-    color: white;
-}
-
-/* Hidden Receipt Template */
-#hidden-receipt-container {
-    position: absolute;
-    left: -9999px;
-    top: -9999px;
-}
-.receipt-template {
-    width: 500px;
-    background: #ffffff;
-    padding: 20px;
-    color: #333;
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-}
-.receipt-header {
-    text-align: center;
-    border-bottom: 2px solid #333;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-}
-.receipt-header h2 { font-size: 20px; color: #2c3e50; margin-bottom: 4px; }
-.receipt-header h3 { font-size: 15px; color: #c0392b; margin-bottom: 4px; font-weight: bold; }
-.receipt-header p { font-size: 12px; color: #555; }
-.receipt-info {
-    display: flex;
-    justify-content: space-between;
-    font-size: 13px;
-    margin-bottom: 10px;
-}
-.receipt-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-}
-.receipt-table, .receipt-table th, .receipt-table td {
-    border: 1px solid #333;
-}
-.receipt-table th, .receipt-table td {
-    padding: 6px;
-    font-size: 12px;
-    text-align: center;
-}
-.receipt-table th { background-color: #eaecee; }
-.receipt-totals {
-    float: right;
-    width: 65%;
-    font-size: 13px;
-    margin-bottom: 10px;
-}
-.receipt-total-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 5px 0;
-    font-weight: bold;
-    border-bottom: 1px solid #ddd;
-}
-.clearfix::after { content: ""; clear: both; display: table; }
-    
+            --primary-color: #2c3e50;
+            --accent-color: #27ae60;
+            --danger-color: #c0392b;
+            --bg-color: #f4f6f7;
+            --white: #ffffff;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: #333;
+            padding: 10px;
+        }
+        .page {
+            max-width: 650px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .card {
+            background: #f9fbfb;
+            border: 1px solid #dcdde1;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+        }
+        .row .form-group {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        table, th, td {
+            border: 1px solid #333;
+        }
+        th, td {
+            padding: 7px;
+            text-align: center;
+            font-size: 12px;
+        }
+        th {
+            background-color: #eaecee;
+        }
+        .database-table {
+            overflow-x: auto;
+        }
+        .summary-box {
+            background: #e8f8f5;
+            border: 1px solid #27ae60;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            color: #27ae60;
+            margin-bottom: 15px;
+        }
+        .btn {
+            background-color: var(--accent-color);
+            color: var(--white);
+            border: none;
+            padding: 10px 15px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+        }
+        .btn-danger {
+            background-color: var(--danger-color);
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+        .btn-secondary {
+            background-color: #2980b9;
+        }
+        .btn-info {
+            background-color: #8e44ad;
+            color: white;
+        }
     </style>
 </head>
-<body>
+    <body>
 
     <div class="page">
-    <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
+        <h2>व्यापार रिपोर्ट तथा विश्लेषण (Analytics & Reports)</h2>
 
-    <!-- NEW RECOVERY SECTION: JSON FILE IMPORT -->
-    <div class="card" style="border-color: #8e44ad; background: #fdfefe;">
-        <h3 style="color: #8e44ad;">🔄 डाटा रिकभरी (JSON फाइल अपलोड गर्नुहोस्)</h3>
-        <div class="form-group">
-            <label>गुगल शीट वा ब्याकअपबाट डाउनलोड गरिएको JSON फाइल छान्नुहोस्:</label>
-            <input type="file" id="json-file-input" accept=".json" style="background: white; padding: 6px;">
-        </div>
-        <button class="btn btn-info" onclick="importJsonData()">📥 डाटा रिकभर (Restore) गर्नुहोस्</button>
-    </div>
-
-    <!-- SECTION 1: TURNOVER REPORT -->
-    <div class="card">
-        <h3>📈 कारोबार (Turnover) रिपोर्ट</h3>
-        <div class="row">
+        <!-- NEW RECOVERY SECTION: JSON FILE IMPORT -->
+        <div class="card" style="border-color: #8e44ad; background: #fdfefe;">
+            <h3 style="color: #8e44ad;">🔄 डाटा रिकभरी (JSON फाइल अपलोड गर्नुहोस्)</h3>
             <div class="form-group">
-                <label>अवधि छान्नुहोस्:</label>
-                <select id="filter-period" onchange="toggleDateInputs()">
-                    <option value="all">सबै (All Time)</option>
-                    <option value="weekly">यो हप्ता (This Week)</option>
-                    <option value="monthly">यो महिना (This Month)</option>
-                    <option value="yearly">यो वर्ष (This Year)</option>
-                    <option value="custom">तاريخ छान्नुहोस् (Custom Range)</option>
-                </select>
+                <label>गुगल शीट वा ब्याकअपबाट डाउनलोड गरिएको JSON फाइल छान्नुहोस्:</label>
+                <input type="file" id="json-file-input" accept=".json" style="background: white; padding: 6px;">
+            </div>
+            <button class="btn btn-info" onclick="importJsonData()">📥 डाटा रिकभर (Restore) गर्नुहोस्</button>
+        </div>
+
+        <!-- SECTION 1: TURNOVER REPORT -->
+        <div class="card">
+            <h3>📈 कारोबार (Turnover) रिपोर्ट</h3>
+            <div class="row">
+                <div class="form-group">
+                    <label>अवधि छान्नुहोस्:</label>
+                    <select id="filter-period" onchange="toggleDateInputs()">
+                        <option value="all">सबै (All Time)</option>
+                        <option value="weekly">यो हप्ता (This Week)</option>
+                        <option value="monthly">यो महिना (This Month)</option>
+                        <option value="yearly">यो वर्ष (This Year)</option>
+                        <option value="custom">तاريخ छान्नुहोस् (Custom Range)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="custom-date-box" class="row" style="display: none;">
+                <div class="form-group">
+                    <label>देखि (From):</label>
+                    <input type="date" id="date-from" onchange="calculateTurnover()">
+                </div>
+                <div class="form-group">
+                    <label>सम्म (To):</label>
+                    <input type="date" id="date-to" onchange="calculateTurnover()">
+                </div>
+            </div>
+            <div class="summary-box" id="turnover-display">
+                कुल कारोबार: रु 0.00
             </div>
         </div>
-        <div id="custom-date-box" class="row" style="display: none;">
+
+        <!-- SECTION 2: SEARCH OPTIONS -->
+        <div class="card">
+            <h3>🔍 बिल, सामान वा ग्राहक खोज्नुहोस्</h3>
             <div class="form-group">
-                <label>देखि (From):</label>
-                <input type="date" id="date-from" onchange="calculateTurnover()">
+                <label>बिल नम्बर (Bill Number Search):</label>
+                <input type="text" id="search-billno" placeholder="जस्तै: 00001..." oninput="filterData()">
             </div>
             <div class="form-group">
-                <label>सम्म (To):</label>
-                <input type="date" id="date-to" onchange="calculateTurnover()">
+                <label>सामानको नाम (Item Sales Search):</label>
+                <input type="text" id="search-item" placeholder="जस्तै: चिनी, चामल..." oninput="filterData()">
+            </div>
+            <div class="form-group">
+                <label>ग्राहकको नाम (Customer Purchase History):</label>
+                <input type="text" id="search-customer" placeholder="ग्राहकको नाम..." oninput="filterData()">
             </div>
         </div>
-        <div class="summary-box" id="turnover-display">
-            कुल कारोबार: रु 0.00
+
+        <!-- SECTION 3: BILLS DATABASE TABLE -->
+        <h3>बिलहरूको सूची</h3>
+        <div class="database-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>बिल नं</th>
+                        <th>मिति</th>
+                        <th>ग्राहक</th>
+                        <th>कुल रकम</th>
+                        <th>कार्य</th>
+                    </tr>
+                </thead>
+                <tbody id="database-rows">
+                    <tr><td colspan="5">डाटा लोड हुँदैछ...</td></tr>
+                </tbody>
+            </table>
         </div>
+
+        <button class="btn btn-secondary" onclick="window.location.href='homepage.html'">⬅️ गृहपृष्ठमा फर्कनुहोस्</button>
     </div>
 
-    <!-- SECTION 2: SEARCH OPTIONS -->
-    <div class="card">
-        <h3>🔍 बिल, सामान वा ग्राहक खोज्नुहोस्</h3>
-        <div class="form-group">
-            <label>बिल नम्बर (Bill Number Search):</label>
-            <input type="text" id="search-billno" placeholder="जस्तै: 00001..." oninput="filterData()">
-        </div>
-        <div class="form-group">
-            <label>सामानको नाम (Item Sales Search):</label>
-            <input type="text" id="search-item" placeholder="जस्तै: चिनी, चामल..." oninput="filterData()">
-        </div>
-        <div class="form-group">
-            <label>ग्राहकको नाम (Customer Purchase History):</label>
-            <input type="text" id="search-customer" placeholder="ग्राहकको नाम..." oninput="filterData()">
-        </div>
-    </div>
+    <!-- Hidden Container to render image snapshot -->
+    <div id="hidden-receipt-container"></div>
+        <!-- Firebase SDK & Database Rendering Script -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-    <!-- SECTION 3: BILLS DATABASE TABLE -->
-    <h3>बिलहरूको सूची</h3>
-    <div class="database-table">
-        <table>
-            <thead>
-                <tr>
-                    <th>बिल नं</th>
-                    <th>मिति</th>
-                    <th>ग्राहक</th>
-                    <th>कुल रकम</th>
-                    <th>कार्य</th>
-                </tr>
-            </thead>
-            <tbody id="database-rows">
-                <!-- Dynamic rows -->
-            </tbody>
-        </table>
-    </div>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
+            authDomain: "karobarapp-950e8.firebaseapp.com",
+            projectId: "karobarapp-950e8",
+            storageBucket: "karobarapp-950e8.firebasestorage.app",
+            messagingSenderId: "590048865310",
+            appId: "1:590048865310:web:af35ec728e1829254920f"
+        };
 
-    <button class="btn btn-secondary" onclick="window.location.href='homepage.html'">⬅️ गृहपृष्ठमा फर्कनुहोस्</button>
-</div>
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-<!-- Hidden Container to render image snapshot -->
-<div id="hidden-receipt-container"></div>
+        let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
 
-<script type="module">
-  // Import the functions you need from the SDKs
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof calculateTurnover === 'function') calculateTurnover();
+            if (typeof renderBillsTable === 'function') renderBillsTable(billsDatabase);
+            fetchBillsFromFirebase();
+        });
 
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
-    authDomain: "karobarapp-950e8.firebaseapp.com",
-    projectId: "karobarapp-950e8",
-    storageBucket: "karobarapp-950e8.firebasestorage.app",
-    messagingSenderId: "590048865310",
-    appId: "1:590048865310:web:af35ec728e1829254920f"
-  };
+        async function fetchBillsFromFirebase() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "bills"));
+                let fetchedBills = [];
+                querySnapshot.forEach((document) => {
+                    fetchedBills.push(document.data());
+                });
 
-  // Initialize Firebase and Firestore Database
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+                if (fetchedBills.length > 0) {
+                    fetchedBills.sort((a, b) => a.billNo.localeCompare(b.billNo));
+                    billsDatabase = fetchedBills;
+                    localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
+                    if (typeof calculateTurnover === 'function') calculateTurnover();
+                    if (typeof filterData === 'function') filterData();
+                    console.log("Bills successfully synced from Firebase.");
+                }
+            } catch (error) {
+                console.warn("Could not fetch from Firebase, using local storage.", error);
+            }
+        }
 
-  let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+        window.syncBillToFirebase = async function(billData) {
+            try {
+                await setDoc(doc(db, "bills", String(billData.billNo)), billData);
+            } catch (error) {
+                console.error("Error syncing to Firebase: ", error);
+            }
+        };
 
-  // Load data on startup
-  window.addEventListener('DOMContentLoaded', () => {
-      if (typeof calculateTurnover === 'function') calculateTurnover();
-      if (typeof renderBillsTable === 'function') renderBillsTable(billsDatabase);
-      fetchBillsFromFirebase();
-  });
+        window.deleteBillFromFirebase = async function(billNo) {
+            try {
+                await deleteDoc(doc(db, "bills", String(billNo)));
+            } catch (error) {
+                console.error("Error deleting from Firebase: ", error);
+            }
+        };
 
-  // Fetch live bills from Firebase Firestore
-  async function fetchBillsFromFirebase() {
-      try {
-          const querySnapshot = await getDocs(collection(db, "bills"));
-          let fetchedBills = [];
-          querySnapshot.forEach((document) => {
-              fetchedBills.push(document.data());
-          });
+        window.billsDatabase = billsDatabase;
+        window.fetchBillsFromFirebase = fetchBillsFromFirebase;
+    </script>
 
-          if (fetchedBills.length > 0) {
-              billsDatabase = fetchedBills;
-              localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
-              if (typeof calculateTurnover === 'function') calculateTurnover();
-              if (typeof filterData === 'function') filterData();
-              console.log("Bills successfully synced from Firebase.");
-          }
-      } catch (error) {
-          console.warn("Could not fetch from Firebase, using local storage.", error);
-      }
-  }
+    <!-- UI Management & Rendering Logic -->
+    <script>
+        function renderBillsTable(bills) {
+            const tbody = document.getElementById('database-rows');
+            tbody.innerHTML = '';
 
-  // Save or update bill in Firebase
-  window.syncBillToFirebase = async function(billData) {
-      try {
-          await setDoc(doc(db, "bills", String(billData.billNo)), billData);
-          console.log(`Bill ${billData.billNo} synced to Firebase.`);
-      } catch (error) {
-          console.error("Error syncing to Firebase: ", error);
-      }
-  };
+            if (!bills || bills.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">कुनै बिल फेला परेन।</td></tr>';
+                return;
+            }
 
-  // Delete bill from Firebase
-  window.deleteBillFromFirebase = async function(billNo) {
-      try {
-          await deleteDoc(doc(db, "bills", String(billNo)));
-          console.log(`Bill ${billNo} deleted from Firebase.`);
-      } catch (error) {
-          console.error("Error deleting from Firebase: ", error);
-      }
-  };
+            bills.forEach((bill) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${bill.billNo || ''}</td>
+                    <td>${bill.date || ''}</td>
+                    <td>${bill.customerName || 'साधारण ग्राहक'}</td>
+                    <td>रु ${bill.grandTotal || '0.00'}</td>
+                    <td><button class="btn btn-danger" onclick="deleteBill('${bill.billNo}')">मेट्नुहोस्</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-  window.billsDatabase = billsDatabase;
-  window.fetchBillsFromFirebase = fetchBillsFromFirebase;
-              </script>
-    
-    
+        function toggleDateInputs() {
+            const period = document.getElementById('filter-period').value;
+            const customBox = document.getElementById('custom-date-box');
+            if (period === 'custom') {
+                customBox.style.display = 'flex';
+            } else {
+                customBox.style.display = 'none';
+                calculateTurnover();
+            }
+        }
+
+        function calculateTurnover() {
+            const period = document.getElementById('filter-period').value;
+            let total = 0;
+            const now = new Date();
+
+            const bills = window.billsDatabase || [];
+
+            bills.forEach(bill => {
+                const billDate = new Date(bill.date);
+                let include = false;
+
+                if (period === 'all') {
+                    include = true;
+                } else if (period === 'weekly') {
+                    const oneWeekAgo = new Date();
+                    oneWeekAgo.setDate(now.getDate() - 7);
+                    if (billDate >= oneWeekAgo && billDate <= now) include = true;
+                } else if (period === 'monthly') {
+                    if (billDate.getMonth() === now.getMonth() && billDate.getFullYear() === now.getFullYear()) include = true;
+                } else if (period === 'yearly') {
+                    if (billDate.getFullYear() === now.getFullYear()) include = true;
+                } else if (period === 'custom') {
+                    const fromStr = document.getElementById('date-from').value;
+                    const toStr = document.getElementById('date-to').value;
+                    if (fromStr && toStr) {
+                        const fromDate = new Date(fromStr);
+                        const toDate = new Date(toStr);
+                        toDate.setHours(23, 59, 59);
+                        if (billDate >= fromDate && billDate <= toDate) include = true;
+                    } else {
+                        include = true;
+                    }
+                }
+
+                if (include) {
+                    total += parseFloat(bill.grandTotal) || 0;
+                }
+            });
+
+            document.getElementById('turnover-display').textContent = `कुल कारोबार: रु ${total.toFixed(2)}`;
+        }
+
+        function filterData() {
+            const billNoQuery = document.getElementById('search-billno').value.toLowerCase();
+            const itemQuery = document.getElementById('search-item').value.toLowerCase();
+            const customerQuery = document.getElementById('search-customer').value.toLowerCase();
+
+            const bills = window.billsDatabase || [];
+
+            const filtered = bills.filter(bill => {
+                const matchBill = (bill.billNo || '').toLowerCase().includes(billNoQuery);
+                const matchCustomer = (bill.customerName || '').toLowerCase().includes(customerQuery);
+                
+                let matchItem = true;
+                if (itemQuery) {
+                    matchItem = (bill.items || []).some(item => (item.desc || '').toLowerCase().includes(itemQuery));
+                }
+
+                return matchBill && matchCustomer && matchItem;
+            });
+
+            renderBillsTable(filtered);
+        }
+
+        async function deleteBill(billNo) {
+            if (confirm(`के तपाई बिल नं ${billNo} मेटाउन चाहनुहुन्छ?`)) {
+                if (typeof window.deleteBillFromFirebase === 'function') {
+                    await window.deleteBillFromFirebase(billNo);
+                }
+                window.billsDatabase = window.billsDatabase.filter(b => b.billNo !== billNo);
+                localStorage.setItem('karobar_bills', JSON.stringify(window.billsDatabase));
+                renderBillsTable(window.billsDatabase);
+                calculateTurnover();
+                alert('बिल सफलतापूर्वक मेटाइयो!');
+            }
+        }
+
+        function importJsonData() {
+            const fileInput = document.getElementById('json-file-input');
+            if (fileInput.files.length === 0) {
+                alert('कृपया पहिले एउटा JSON फाइल छान्नुहोस्!');
+                return;
+            }
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        window.billsDatabase = importedData;
+                        localStorage.setItem('karobar_bills', JSON.stringify(importedData));
+                        
+                        for (let bill of importedData) {
+                            if (typeof window.syncBillToFirebase === 'function') {
+                                await window.syncBillToFirebase(bill);
+                            }
+                        }
+
+                        renderBillsTable(window.billsDatabase);
+                        calculateTurnover();
+                        alert('डाटा सफलतापूर्वक रिकभर (Restore) भयो!');
+                    } else {
+                        alert('अमान्य फाइल ढाँचा (Invalid JSON format)');
+                    }
+                } catch (err) {
+                    alert('फाइल पढ्न सकिएन: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
 </body>
-</html>
+    </html>
+
