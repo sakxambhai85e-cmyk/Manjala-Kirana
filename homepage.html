@@ -316,22 +316,26 @@ const firebaseConfig = {
     appId: "1:590048865310:web:af35ec728e1829254920f"
 };
 
-// 1. Initialize Firebase App First
+// Initialize Firebase App & Services
 const app = initializeApp(firebaseConfig);
-
-// 2. Setup Auth & Firestore using initialized app instance
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Check if user is authenticated; if not, kick them back to login page
+// Authentication Check: Redirect to login if user is not signed in
 onAuthStateChanged(auth, (user) => {
     if (!user) {
         window.location.href = 'index.html';
     }
 });
 
-document.getElementById('bill-date').valueAsDate = new Date();
+window.billGenerated = false;
 
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('bill-date').valueAsDate = new Date();
+    initFirebaseSync();
+});
+
+// Sync data and assign next bill number
 async function initFirebaseSync() {
     try {
         const querySnapshot = await getDocs(collection(db, "bills"));
@@ -350,10 +354,44 @@ async function initFirebaseSync() {
     }
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    initFirebaseSync();
-});
+// Add new product row in table
+window.addRow = function() {
+    const tbody = document.getElementById('items-body');
+    const rowCount = tbody.rows.length + 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>${rowCount}</td>
+        <td><input type="text" class="table-input item-desc" placeholder="सामानको नाम" style="text-align: left; padding-left: 6px;"></td>
+        <td><input type="number" class="table-input item-qty" placeholder="" oninput="calculateTotals()"></td>
+        <td><input type="number" class="table-input item-rate" placeholder="" oninput="calculateTotals()"></td>
+        <td class="item-amount">0.00</td>
+    `;
+    tbody.appendChild(tr);
+}
 
+// Calculate sub-total, discount, and grand total dynamically
+window.calculateTotals = function() {
+    const rows = document.querySelectorAll('#items-body tr');
+    let subTotal = 0;
+
+    rows.forEach(row => {
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+        const amount = qty * rate;
+        row.querySelector('.item-amount').textContent = amount.toFixed(2);
+        subTotal += amount;
+    });
+
+    document.getElementById('sub-total').textContent = subTotal.toFixed(2);
+    
+    // Proper discount logic calculation
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const grandTotal = subTotal - discount;
+    
+    document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
+}
+
+// Save bill locally and sync to Firebase
 window.saveBill = async function() {
     try {
         const billNo = document.getElementById('display-bill-no').textContent;
@@ -399,17 +437,133 @@ window.saveBill = async function() {
         document.getElementById('btn-email').removeAttribute('disabled');
         document.getElementById('btn-save').setAttribute('disabled', 'true');
     }
-};
+}
 
+// Populate hidden clean receipt layout for image capture
+function populateHiddenReceipt() {
+    document.getElementById('img-out-billno').textContent = document.getElementById('display-bill-no').textContent;
+    document.getElementById('img-out-date').textContent = document.getElementById('bill-date').value;
+    document.getElementById('img-out-name').textContent = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+    document.getElementById('img-out-addr').textContent = document.getElementById('customer-address').value || '-';
+    
+    const tbody = document.getElementById('img-out-tbody');
+    tbody.innerHTML = '';
+    document.querySelectorAll('#items-body tr').forEach((row, i) => {
+        const desc = row.querySelector('.item-desc').value || 'सामान';
+        const qty = row.querySelector('.item-qty').value || '0';
+        const rate = row.querySelector('.item-rate').value || '0';
+        const amt = row.querySelector('.item-amount').textContent || '0.00';
+        tbody.innerHTML += `
+            <tr>
+                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${i+1}</td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: left; padding-left: 6px;">${desc}</td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${qty}</td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: center;">${rate}</td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: right; padding-right: 6px;">${amt}</td>
+            </tr>
+        `;
+    });
+
+    document.getElementById('img-out-sub').textContent = document.getElementById('sub-total').textContent;
+    document.getElementById('img-out-disc').textContent = document.getElementById('discount').value || '0.00';
+    document.getElementById('img-out-grand').textContent = document.getElementById('grand-total').textContent;
+}
+
+// Download image bill using html2canvas
+window.downloadImage = function() {
+    if (!window.billGenerated) {
+        alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
+        return;
+    }
+    populateHiddenReceipt();
+    const receiptTemplate = document.getElementById('hidden-receipt-template');
+    
+    html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg');
+        link.click();
+    });
+}
+
+// Generate structured text message for WhatsApp/Email
+function generateBillText() {
+    const billNo = document.getElementById('display-bill-no').textContent;
+    const date = document.getElementById('bill-date').value;
+    const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+    const customerAddress = document.getElementById('customer-address').value || '-';
+    const subTotal = document.getElementById('sub-total').textContent;
+    const discount = document.getElementById('discount').value || '0';
+    const grandTotal = document.getElementById('grand-total').textContent;
+
+    let text = `🛒 *मञ्जला किराना पसल*\n`;
+    text += `पान रसीद (PAN BILL)\n`;
+    text += `शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ\n`;
+    text += `PAN: ६२४४१६०७०\n`;
+    text += `-----------------------------------\n`;
+    text += `बिल नं: ${billNo}\n`;
+    text += `मिति: ${date}\n`;
+    text += `ग्राहक: ${customerName}\n`;
+    text += `ठेगाना: ${customerAddress}\n`;
+    text += `-----------------------------------\n`;
+    text += `*सामानको विवरण:*\n`;
+
+    document.querySelectorAll('#items-body tr').forEach((row, i) => {
+        const desc = row.querySelector('.item-desc').value || 'सामान';
+        const qty = row.querySelector('.item-qty').value || '0';
+        const rate = row.querySelector('.item-rate').value || '0';
+        const amt = row.querySelector('.item-amount').textContent || '0.00';
+        text += `${i+1}. ${desc} | ${qty} x ${rate} = रु ${amt}\n`;
+    });
+
+    text += `-----------------------------------\n`;
+    text += `जम्मा: रु ${subTotal}\n`;
+    text += `छुट: रु ${discount}\n`;
+    text += `*कुल जम्मा: रु ${grandTotal}*\n`;
+    text += `-----------------------------------\n`;
+    text += `धन्यवाद! फेरी आउनुहोला।`;
+
+    return text;
+}
+
+// Share via WhatsApp
+window.shareWhatsApp = function() {
+    if (!window.billGenerated) {
+        alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
+        return;
+    }
+    if (document.getElementById('download-with-share').checked) {
+        downloadImage();
+    }
+    const text = encodeURIComponent(generateBillText());
+    window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+}
+
+// Send via Email
+window.sendEmail = function() {
+    if (!window.billGenerated) {
+        alert('कृपया पहिले बिल सेभ गर्नुहोस्!');
+        return;
+    }
+    if (document.getElementById('download-with-share').checked) {
+        downloadImage();
+    }
+    const email = document.getElementById('customer-email').value || '';
+    const billNo = document.getElementById('display-bill-no').textContent;
+    const subject = encodeURIComponent(`मञ्जला किराना पसल - बिल नं ${billNo}`);
+    const body = encodeURIComponent(generateBillText());
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+// Handle User Logout
 window.handleLogout = function() {
     signOut(auth).then(() => {
         window.location.href = 'index.html';
-    }).catch((error) => {
-        console.error("Logout error: ", error);
     });
-};
+    }
         
-        
+
+
     </script>
 </body>
 </html>
