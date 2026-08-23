@@ -255,82 +255,144 @@
 
     <!-- Firebase SDK & Logic -->
     <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-                                import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, setDoc, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
+            authDomain: "karobarapp-950e8.firebaseapp.com",
+            projectId: "karobarapp-950e8",
+            storageBucket: "karobarapp-950e8.firebasestorage.app",
+            messagingSenderId: "590048865310",
+            appId: "1:590048865310:web:af35ec728e1829254920f"
+        };
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
-    authDomain: "karobarapp-950e8.firebaseapp.com",
-    projectId: "karobarapp-950e8",
-    storageBucket: "karobarapp-950e8.firebasestorage.app",
-    messagingSenderId: "590048865310",
-    appId: "1:590048865310:web:af35ec728e1829254920f"
-};
+        // 1. Initialize Firebase App FIRST
+        const app = initializeApp(firebaseConfig);
+        
+        // 2. Then initialize Auth and Firestore using the app instance
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-// 1. Initialize Firebase App First
-const app = initializeApp(firebaseConfig);
-
-// 2. Setup Auth & Firestore using initialized app instance
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Check if user is authenticated; if not, kick them back to login page
-onAuthStateChanged(auth, (user) => {
-    if (!user) {
-        window.location.href = 'index.html';
-    }
-});
-
-let billsDatabase = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-
-window.addEventListener('DOMContentLoaded', () => {
-    if (typeof calculateTurnover === 'function') calculateTurnover();
-    if (typeof renderBillsTable === 'function') renderBillsTable(billsDatabase);
-    fetchBillsFromFirebase();
-});
-
-async function fetchBillsFromFirebase() {
-    try {
-        const querySnapshot = await getDocs(collection(db, "bills"));
-        let fetchedBills = [];
-        querySnapshot.forEach((document) => {
-            fetchedBills.push(document.data());
+        // Check if user is authenticated; if not, kick them back to login page
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+            }
         });
 
-        if (fetchedBills.length > 0) {
-            fetchedBills.sort((a, b) => a.billNo.localeCompare(b.billNo));
-            billsDatabase = fetchedBills;
-            localStorage.setItem('karobar_bills', JSON.stringify(billsDatabase));
-            if (typeof calculateTurnover === 'function') calculateTurnover();
-            if (typeof filterData === 'function') filterData();
-            console.log("Bills successfully synced from Firebase.");
-        }
-    } catch (error) {
-        console.warn("Could not fetch from Firebase, using local storage.", error);
-    }
-}
+        const urlParams = new URLSearchParams(window.location.search);
+        const billNoToEdit = urlParams.get('billNo');
 
-window.syncBillToFirebase = async function(billData) {
-    try {
-        await setDoc(doc(db, "bills", String(billData.billNo)), billData);
-    } catch (error) {
-        console.error("Error syncing to Firebase: ", error);
-    }
-};
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!billNoToEdit) {
+                alert('कुनै बिल छनोट गरिएको छैन!');
+                window.location.href = 'database.html';
+                return;
+            }
 
-window.deleteBillFromFirebase = async function(billNo) {
-    try {
-        await deleteDoc(doc(db, "bills", String(billNo)));
-    } catch (error) {
-        console.error("Error deleting from Firebase: ", error);
-    }
-};
+            document.getElementById('display-bill-no').textContent = billNoToEdit;
 
-window.billsDatabase = billsDatabase;
-window.fetchBillsFromFirebase = fetchBillsFromFirebase;
-                                 
-    </script>
+            // Try loading from LocalStorage first, then Firebase
+            let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+            let targetBill = localBills.find(b => b.billNo === billNoToEdit);
+
+            if (!targetBill) {
+                try {
+                    const docRef = doc(db, "bills", String(billNoToEdit));
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        targetBill = docSnap.data();
+                    }
+                } catch (err) {
+                    console.error("Error fetching from Firebase:", err);
+                }
+            }
+
+            if (targetBill) {
+                document.getElementById('bill-date').value = targetBill.date || '';
+                document.getElementById('customer-name').value = targetBill.customerName || '';
+                document.getElementById('customer-address').value = targetBill.customerAddress || '';
+                document.getElementById('customer-email').value = targetBill.customerEmail || '';
+                
+                const tbody = document.getElementById('items-body');
+                tbody.innerHTML = '';
+                if (targetBill.items && targetBill.items.length > 0) {
+                    targetBill.items.forEach((item, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td><input type="text" class="table-input item-desc" value="${item.desc || ''}" style="text-align: left; padding-left: 6px;"></td>
+                            <td><input type="number" class="table-input item-qty" value="${item.qty || ''}" oninput="calculateTotals()"></td>
+                            <td><input type="number" class="table-input item-rate" value="${item.rate || ''}" oninput="calculateTotals()"></td>
+                            <td class="item-amount">${item.amount || '0.00'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                calculateTotals();
+            } else {
+                alert('बिल फेला परेन!');
+                window.location.href = 'database.html';
+            }
+        });
+
+        window.updateBill = async function() {
+            try {
+                const billNo = document.getElementById('display-bill-no').textContent;
+                const date = document.getElementById('bill-date').value;
+                const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+                const customerAddress = document.getElementById('customer-address').value || '-';
+                const customerEmail = document.getElementById('customer-email').value || '';
+                const grandTotal = document.getElementById('grand-total').textContent;
+
+                const rows = document.querySelectorAll('#items-body tr');
+                let items = [];
+                rows.forEach(row => {
+                    items.push({
+                        desc: row.querySelector('.item-desc').value || 'सामान',
+                        qty: row.querySelector('.item-qty').value || '0',
+                        rate: row.querySelector('.item-rate').value || '0',
+                        amount: row.querySelector('.item-amount').textContent || '0.00'
+                    });
+                });
+
+                const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
+                
+                // Update LocalStorage
+                let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+                localBills = localBills.map(b => b.billNo === billNo ? billData : b);
+                localStorage.setItem('karobar_bills', JSON.stringify(localBills));
+
+                // Update Firebase
+                await setDoc(doc(db, "bills", String(billNo)), billData);
+
+                alert('बिल सफलतापूर्वक अपडेट भयो!');
+                window.location.href = 'database.html';
+            } catch (err) {
+                console.error("Update error:", err);
+                alert('अपडेट गर्न समस्या भयो: ' + err.message);
+            }
+        };
+
+        window.deleteCurrentBill = async function() {
+            const billNo = document.getElementById('display-bill-no').textContent;
+            if (confirm(`के तपाई बिल नं ${billNo} मेटाउन चाहनुहुन्छ?`)) {
+                try {
+                    await deleteDoc(doc(db, "bills", String(billNo)));
+                    let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+                    localBills = localBills.filter(b => b.billNo !== billNo);
+                    localStorage.setItem('karobar_bills', JSON.stringify(localBills));
+                    alert('बिल सफलतापूर्वक मेटाइयो!');
+                    window.location.href = 'database.html';
+                } catch (err) {
+                    alert('मेटाउन सकिएन: ' + err.message);
+                }
+            }
+        };
+                </script>
+    
+
 </body>
 </html>
