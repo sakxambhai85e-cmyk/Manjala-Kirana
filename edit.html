@@ -251,9 +251,8 @@
         <div style="clear: both; text-align: center; margin-top: 30px; font-size: 11px; color: #555;">
             धन्यवाद! फेरी आउनुहोला।
         </div>
-    </div>
-
-    <!-- Firebase SDK & Logic -->
+                                  </div>
+        <!-- Firebase SDK & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
@@ -268,10 +267,8 @@
             appId: "1:590048865310:web:af35ec728e1829254920f"
         };
 
-        // 1. Initialize Firebase App FIRST
+        // Initialize Firebase app first before auth/firestore calls[span_0](start_span)[span_0](end_span)
         const app = initializeApp(firebaseConfig);
-        
-        // 2. Then initialize Auth and Firestore using the app instance
         const auth = getAuth(app);
         const db = getFirestore(app);
 
@@ -391,8 +388,82 @@
                 }
             }
         };
-                </script>
-    
+    </script>
 
+    <!-- UI Management & Helper Functions Script -->
+    <script>
+        function addRow() {
+            const tbody = document.getElementById('items-body');
+            const rowCount = tbody.rows.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="table-input item-desc" placeholder="सामानको नाम" style="text-align: left; padding-left: 6px;"></td>
+                <td><input type="number" class="table-input item-qty" placeholder="" oninput="calculateTotals()"></td>
+                <td><input type="number" class="table-input item-rate" placeholder="" oninput="calculateTotals()"></td>
+                <td class="item-amount">0.00</td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function calculateTotals() {
+            const rows = document.querySelectorAll('#items-body tr');
+            let subTotal = 0;
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                const amount = qty * rate;
+                row.querySelector('.item-amount').textContent = amount.toFixed(2);
+                subTotal += amount;
+            });
+
+            document.getElementById('sub-total').textContent = subTotal.toFixed(2);
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const grandTotal = subTotal - discount;
+            document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
+        }
+
+        function populateHiddenReceipt() {
+            document.getElementById('img-out-billno').textContent = document.getElementById('display-bill-no').textContent;
+            document.getElementById('img-out-date').textContent = document.getElementById('bill-date').value;
+            document.getElementById('img-out-name').textContent = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+            document.getElementById('img-out-addr').textContent = document.getElementById('customer-address').value || '-';
+            
+            const tbody = document.getElementById('img-out-tbody');
+            tbody.innerHTML = '';
+            document.querySelectorAll('#items-body tr').forEach((row, i) => {
+                const desc = row.querySelector('.item-desc').value || 'सामान';
+                const qty = row.querySelector('.item-qty').value || '0';
+                const rate = row.querySelector('.item-rate').value || '0';
+                const amt = row.querySelector('.item-amount').textContent || '0.00';
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${i+1}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: left; padding-left: 6px;">${desc}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${qty}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: center;">${rate}</td>
+                        <td style="border: 1px solid #000; padding: 4px; text-align: right; padding-right: 6px;">${amt}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('img-out-sub').textContent = document.getElementById('sub-total').textContent;
+            document.getElementById('img-out-disc').textContent = document.getElementById('discount').value || '0.00';
+            document.getElementById('img-out-grand').textContent = document.getElementById('grand-total').textContent;
+        }
+
+        function downloadImage() {
+            populateHiddenReceipt();
+            const receiptTemplate = document.getElementById('hidden-receipt-template');
+            
+            html2canvas(receiptTemplate, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `bill_${document.getElementById('display-bill-no').textContent}.jpg`;
+                link.href = canvas.toDataURL('image/jpeg');
+                link.click();
+            });
+        }
+    </script>
 </body>
 </html>
