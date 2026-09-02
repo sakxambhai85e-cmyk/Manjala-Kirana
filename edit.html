@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>मञ्जला किराना पसल - बिल सम्पादन</title>
+    <!-- html2canvas Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
@@ -33,45 +34,25 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             margin-bottom: 15px;
         }
-        .nav-bar {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            gap: 10px;
-        }
-        .nav-btn {
-            background-color: #34495e;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: bold;
-            text-decoration: none;
-            text-align: center;
-            flex: 1;
-        }
-        .nav-btn.letter-link {
-            background-color: #d35400;
-        }
         .header-box {
             text-align: center;
-            border-bottom: 2px solid var(--primary-color);
+            border-bottom: 2px solid #333;
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
-        .header-box h2 {
-            color: var(--primary-color);
-            font-size: 20px;
-            margin-bottom: 3px;
-        }
-        .header-box p {
-            font-size: 13px;
-            color: #555;
+        .header-box h1 { font-size: 22px; color: var(--primary-color); margin-bottom: 4px; }
+        .header-box h3 { font-size: 15px; color: var(--danger-color); margin-bottom: 4px; font-weight: bold; }
+        .header-box p { font-size: 13px; color: #555; }
+        .bill-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 12px;
         }
         .form-group {
             margin-bottom: 12px;
+            text-align: left;
         }
         .form-group label {
             display: block;
@@ -81,305 +62,375 @@
         }
         .form-group input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 14px;
-        }
-        .table-container {
-            overflow-x: auto;
-            margin-bottom: 15px;
+            font-size: 15px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        table, th, td {
+            border: 1px solid #333;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 6px;
+            padding: 8px 4px;
             text-align: center;
-        }
-        th {
-            background-color: #f8f9fa;
-            color: var(--primary-color);
-        }
-        td input {
-            width: 100%;
-            padding: 4px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
             font-size: 13px;
+        }
+        th { background-color: #eaecee; }
+        .table-input {
+            width: 100%;
+            border: none;
+            background: transparent;
             text-align: center;
-        }
-        td input.desc-input {
-            text-align: left;
-        }
-        .totals-box {
-            background: #f9f9f9;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
             font-size: 14px;
+            padding: 4px;
         }
-        .totals-row {
+        .totals-section {
+            float: right;
+            width: 65%;
+            margin-bottom: 20px;
+        }
+        .total-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 6px;
-        }
-        .totals-row.grand {
+            padding: 6px 0;
+            font-size: 14px;
             font-weight: bold;
-            font-size: 16px;
-            color: var(--danger-color);
-            border-top: 1px dashed #ccc;
-            padding-top: 6px;
+            border-bottom: 1px solid #ddd;
         }
+        .clearfix::after { content: ""; clear: both; display: table; }
         .btn {
             background-color: var(--accent-color);
             color: var(--white);
             border: none;
-            padding: 10px;
-            font-size: 14px;
+            padding: 12px 20px;
+            font-size: 15px;
             border-radius: 4px;
             cursor: pointer;
             width: 100%;
-            font-weight: bold;
-            margin-bottom: 8px;
+            margin-top: 8px;
         }
         .btn-danger { background-color: var(--danger-color); }
         .btn-secondary { background-color: #2980b9; }
+        .btn-warning { background-color: #f39c12; color: white; }
+        .actions-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
 
-        /* Hidden receipt template for image downloading */
+        /* Hidden Template for Image Export */
         #hidden-receipt-template {
             position: absolute;
             left: -9999px;
             top: 0;
-            width: 400px;
+            width: 550px;
             background: #ffffff;
-            padding: 20px;
+            padding: 30px;
             color: #000;
             font-family: 'Segoe UI', Tahoma, sans-serif;
-            font-size: 12px;
         }
     </style>
 </head>
 <body>
-        <div class="page">
-        <div class="nav-bar">
-            <a href="database.html" class="nav-btn">📊 डाटाबेस</a>
-            <a href="homepage.html" class="nav-btn">🏠 गृहपृष्ठ</a>
-            <a href="letter.html" class="nav-btn letter-link">📄 लेटरहेड</a>
-        </div>
 
+    <div class="page">
         <div class="header-box">
-            <h2>मञ्जला किराना पसल</h2>
-            <p>बिल सम्पादन (Edit Bill)</p>
+            <h1>मञ्जला किराना पसल</h1>
+            <h3>पान रसीद (PAN BILL - Edit Mode)</h3>
+            <p>शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
+            <p>स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
+        </div>
+
+        <div class="bill-info">
+            <div><label>बिल नं: <span id="display-bill-no">000001</span></label></div>
+            <div><label>मिति: <input type="date" id="bill-date" style="padding: 4px; font-size: 13px; border:1px solid #ccc; border-radius: 4px;"></label></div>
         </div>
 
         <div class="form-group">
-            <label>बिल नं (Bill No):</label>
-            <span id="display-bill-no" style="font-weight: bold; font-size: 15px;">-</span>
+            <label>ग्राहकको नाम:</label>
+            <input type="text" id="customer-name" placeholder="ग्राहकको नाम लेख्नुहोस्">
         </div>
-
         <div class="form-group">
-            <label>ग्राहकको नाम (Customer Name):</label>
-            <input type="text" id="customer-name">
+            <label>ठेगाना:</label>
+            <input type="text" id="customer-address" placeholder="ठेगाना लेख्नुहोस्">
         </div>
-
         <div class="form-group">
-            <label>मिति (Date):</label>
-            <input type="text" id="bill-date">
+            <label>इमेल ठेगाना (Email):</label>
+            <input type="email" id="customer-email" placeholder="customer@gmail.com">
         </div>
 
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 8%;">क्र.सं.</th>
-                        <th style="width: 42%;">विवरण</th>
-                        <th style="width: 12%;">परिमाण</th>
-                        <th style="width: 16%;">दर</th>
-                        <th style="width: 22%;">जम्मा</th>
-                    </tr>
-                </thead>
-                <tbody id="items-table-body">
-                    </tbody>
-            </table>
-        </div>
+        <h4 style="margin: 15px 0 5px 0;">सामानको विवरण</h4>
+        <table id="bill-items-table">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">सि.नं.</th>
+                    <th style="width: 40%;">विवरण (Particulars)</th>
+                    <th style="width: 15%;">परिमाण</th>
+                    <th style="width: 15%;">दर</th>
+                    <th style="width: 20%;">रकम</th>
+                </tr>
+            </thead>
+            <tbody id="items-body">
+                <!-- Rows injected dynamically -->
+            </tbody>
+        </table>
+        <button class="btn btn-secondary" style="padding: 6px; font-size: 13px; margin-bottom: 15px;" onclick="addRow()">+ अर्को सामान थप्नुहोस्</button>
 
-        <div class="totals-box">
-            <div class="totals-row">
-                <span>जम्मा (Sub Total):</span>
-                <span id="sub-total">0.00</span>
-            </div>
-            <div class="totals-row">
-                <span>छुट (Discount):</span>
-                <input type="number" id="discount" value="0" style="width: 100px; padding: 2px; text-align: right;" oninput="calculateTotals()">
-            </div>
-            <div class="totals-row grand">
-                <span>कुल जम्मा (Grand Total):</span>
-                <span id="grand-total">0.00</span>
+        <div class="clearfix">
+            <div class="totals-section">
+                <div class="total-row">
+                    <span>जम्मा (Total):</span>
+                    <span id="sub-total">0.00</span>
+                </div>
+                <div class="total-row">
+                    <span>छुट (Discount):</span>
+                    <input type="number" id="discount" value="0" style="width: 90px; text-align: right; border:1px solid #ccc; padding:3px; border-radius:4px;" oninput="calculateTotals()">
+                </div>
+                <div class="total-row" style="border-top: 2px solid #333; padding-top: 6px;">
+                    <span>कुल जम्मा (Grand Total):</span>
+                    <span id="grand-total">0.00</span>
+                </div>
             </div>
         </div>
-
-        <button class="btn" onclick="saveEditedBill()">💾 परिवर्तनहरू सेभ गर्नुहोस्</button>
-        <button class="btn btn-secondary" onclick="downloadImage()">📥 बिल तस्बिर डाउनलोड (JPG)</button>
-        <button class="btn btn-danger" onclick="deleteCurrentBill()">🗑️ यो बिल मेटाउनुहोस्</button>
+    </div>
+        <!-- Actions Bar -->
+    <div class="page" style="background: transparent; box-shadow: none; padding: 0;">
+        <div class="actions-bar">
+            <button class="btn btn-warning" onclick="updateBill()">💾 परिवर्तनहरू सेभ (Update) गर्नुहोस्</button>
+            <button class="btn btn-secondary" onclick="downloadImage()">📥 बिलको फोटो डाउनलोड गर्नुहोस्</button>
+            <button class="btn btn-danger" onclick="deleteCurrentBill()">🗑️ यो बिल मेट्नुहोस् (Delete)</button>
+            <button class="btn btn-secondary" onclick="window.location.href='database.html'">📊 डाटाबेस / रिपोर्टमा फर्कनुहोस्</button>
+        </div>
     </div>
 
+    <!-- Hidden Template for Image Export -->
     <div id="hidden-receipt-template">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px;">
-            <h3 style="margin: 0; font-size: 16px;">मञ्जला किराना पसल</h3>
-            <p style="margin: 2px 0; font-size: 11px;">शान्ति टोल, सुन्दरहरैंचा-९, मोरङ</p>
-            <p style="margin: 2px 0; font-size: 11px;">प्यान नं: ६२४४१६०७०</p>
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+            <h2 style="font-size: 20px; color: #2c3e50; margin-bottom: 2px;">मञ्जला किराना पसल</h2>
+            <h4 style="font-size: 14px; color: #c0392b; margin-bottom: 2px;">पान रसीद (PAN BILL)</h4>
+            <p style="font-size: 11px; color: #333;">शान्ति टोल, सुन्दरहरैंचा, वार्ड नं ९, मोरङ</p>
+            <p style="font-size: 11px; color: #333;">स्थायी लेखा नम्बर (PAN): ६२४४१६०७०</p>
         </div>
-        <div style="font-size: 11px; margin-bottom: 8px;">
-            <div><b>बिल नं:</b> <span id="img-out-billno"></span></div>
-            <div><b>ग्राहक:</b> <span id="img-out-name"></span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px;">
+            <div><b>बिल नं:</b> <span id="img-out-billno">000001</span></div>
             <div><b>मिति:</b> <span id="img-out-date"></span></div>
         </div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px;">
+        <div style="font-size: 12px; margin-bottom: 12px;">
+            <div><b>ग्राहकको नाम:</b> <span id="img-out-name">साधारण ग्राहक</span></div>
+            <div><b>ठेगाना:</b> <span id="img-out-addr">-</span></div>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
             <thead>
                 <tr style="background: #eee;">
-                    <th style="border: 1px solid #000; padding: 4px;">क्र.</th>
+                    <th style="border: 1px solid #000; padding: 4px;">सि.नं.</th>
                     <th style="border: 1px solid #000; padding: 4px;">विवरण</th>
-                    <th style="border: 1px solid #000; padding: 4px;">परि.</th>
+                    <th style="border: 1px solid #000; padding: 4px;">परिमाण</th>
                     <th style="border: 1px solid #000; padding: 4px;">दर</th>
-                    <th style="border: 1px solid #000; padding: 4px;">जम्मा</th>
+                    <th style="border: 1px solid #000; padding: 4px;">रकम</th>
                 </tr>
             </thead>
             <tbody id="img-out-tbody"></tbody>
         </table>
-        <div style="font-size: 11px; text-align: right; line-height: 1.4;">
-            <div>जम्मा रकम: रु <span id="img-out-sub">0.00</span></div>
-            <div>छुट: रु <span id="img-out-disc">0.00</span></div>
-            <div style="font-weight: bold; font-size: 13px; border-top: 1px solid #000; margin-top: 4px; padding-top: 4px;">कुल जम्मा: रु <span id="img-out-grand">0.00</span></div>
+        <div style="float: right; width: 55%; font-size: 12px;">
+            <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ddd;">
+                <span>जम्मा (Total):</span> <span id="img-out-sub">0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #ddd;">
+                <span>छुट (Discount):</span> <span id="img-out-disc">0.00</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 4px 0; font-weight: bold; border-top: 2px solid #000;">
+                <span>कुल जम्मा:</span> <span id="img-out-grand">0.00</span>
+            </div>
         </div>
-        <div style="text-align: center; margin-top: 15px; font-size: 10px; color: #555;">
+        <div style="clear: both; text-align: center; margin-top: 30px; font-size: 11px; color: #555;">
             धन्यवाद! फेरी आउनुहोला।
         </div>
-    </div>
-        <script>
-        let currentBillId = null;
-        let billItemsData = [];
+                                  </div>
+                                      <!-- Firebase SDK & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            currentBillId = urlParams.get('id');
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOpqfC82JPj3et5q5Bx4ROcqGK_QT7DnQ",
+            authDomain: "karobarapp-950e8.firebaseapp.com",
+            projectId: "karobarapp-950e8",
+            storageBucket: "karobarapp-950e8.firebasestorage.app",
+            messagingSenderId: "590048865310",
+            appId: "1:590048865310:web:af35ec728e1829254920f"
+        };
 
-            if (!currentBillId) {
-                alert('कुनै बिल चयन गरिएको छैन!');
-                window.location.href = 'database.html';
-                return;
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
             }
-
-            loadBillData();
         });
 
-        function loadBillData() {
-            const savedBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-            const bill = savedBills.find(b => b.id == currentBillId);
+        const urlParams = new URLSearchParams(window.location.search);
+        const billNoToEdit = urlParams.get('billNo');
 
-            if (!bill) {
-                alert('बिल फेला परेन!');
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!billNoToEdit) {
+                alert('कुनै बिल छनोट गरिएको छैन!');
                 window.location.href = 'database.html';
                 return;
             }
 
-            document.getElementById('display-bill-no').textContent = bill.billNo;
-            document.getElementById('customer-name').value = bill.customerName || '';
-            document.getElementById('bill-date').value = bill.date || '';
-            document.getElementById('discount').value = bill.discount || 0;
+            document.getElementById('display-bill-no').textContent = billNoToEdit;
 
-            billItemsData = bill.items || [];
-            renderEditTable();
-            calculateTotals();
-        }
+            let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+            let targetBill = localBills.find(b => b.billNo === billNoToEdit);
 
-        function renderEditTable() {
-            const tbody = document.getElementById('items-table-body');
-            tbody.innerHTML = '';
+            if (!targetBill) {
+                try {
+                    const docRef = doc(db, "bills", String(billNoToEdit));
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        targetBill = docSnap.data();
+                    }
+                } catch (err) {
+                    console.error("Error fetching from Firebase:", err);
+                }
+            }
 
-            billItemsData.forEach((item, index) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td><input type="text" class="desc-input" value="${item.description || ''}" oninput="updateItem(${index}, 'description', this.value)"></td>
-                    <td><input type="number" value="${item.quantity || 1}" oninput="updateItem(${index}, 'quantity', this.value)"></td>
-                    <td><input type="number" value="${item.rate || 0}" oninput="updateItem(${index}, 'rate', this.value)"></td>
-                    <td id="row-total-${index}">${((item.quantity || 0) * (item.rate || 0)).toFixed(2)}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+            if (targetBill) {
+                document.getElementById('bill-date').value = targetBill.date || '';
+                document.getElementById('customer-name').value = targetBill.customerName || '';
+                document.getElementById('customer-address').value = targetBill.customerAddress || '';
+                document.getElementById('customer-email').value = targetBill.customerEmail || '';
+                
+                const tbody = document.getElementById('items-body');
+                tbody.innerHTML = '';
+                if (targetBill.items && targetBill.items.length > 0) {
+                    targetBill.items.forEach((item, index) => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td><input type="text" class="table-input item-desc" value="${item.desc || ''}" style="text-align: left; padding-left: 6px;"></td>
+                            <td><input type="number" class="table-input item-qty" value="${item.qty || ''}" oninput="calculateTotals()"></td>
+                            <td><input type="number" class="table-input item-rate" value="${item.rate || ''}" oninput="calculateTotals()"></td>
+                            <td class="item-amount">${item.amount || '0.00'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+                calculateTotals();
+            } else {
+                alert('बिल फेला परेन!');
+                window.location.href = 'database.html';
+            }
+        });
 
-        function updateItem(index, field, value) {
-            billItemsData[index][field] = field === 'description' ? value : parseFloat(value) || 0;
-            const qty = parseFloat(billItemsData[index].quantity) || 0;
-            const rate = parseFloat(billItemsData[index].rate) || 0;
-            document.getElementById(`row-total-${index}`).textContent = (qty * rate).toFixed(2);
-            calculateTotals();
+        window.updateBill = async function() {
+            try {
+                const billNo = document.getElementById('display-bill-no').textContent;
+                const date = document.getElementById('bill-date').value;
+                const customerName = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+                const customerAddress = document.getElementById('customer-address').value || '-';
+                const customerEmail = document.getElementById('customer-email').value || '';
+                const grandTotal = document.getElementById('grand-total').textContent;
+
+                const rows = document.querySelectorAll('#items-body tr');
+                let items = [];
+                rows.forEach(row => {
+                    items.push({
+                        desc: row.querySelector('.item-desc').value || 'सामान',
+                        qty: row.querySelector('.item-qty').value || '0',
+                        rate: row.querySelector('.item-rate').value || '0',
+                        amount: row.querySelector('.item-amount').textContent || '0.00'
+                    });
+                });
+
+                const billData = { billNo, date, customerName, customerAddress, customerEmail, items, grandTotal };
+                
+                let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+                localBills = localBills.map(b => b.billNo === billNo ? billData : b);
+                localStorage.setItem('karobar_bills', JSON.stringify(localBills));
+
+                await setDoc(doc(db, "bills", String(billNo)), billData);
+
+                alert('बिल सफलतापूर्वक अपडेट भयो!');
+                window.location.href = 'database.html';
+            } catch (err) {
+                console.error("Update error:", err);
+                alert('अपडेट गर्न समस्या भयो: ' + err.message);
+            }
+        };
+
+        window.deleteCurrentBill = async function() {
+            const billNo = document.getElementById('display-bill-no').textContent;
+            if (confirm(`के तपाई बिल नं ${billNo} मेटाउन चाहनुहुन्छ?`)) {
+                try {
+                    await deleteDoc(doc(db, "bills", String(billNo)));
+                    let localBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
+                    localBills = localBills.filter(b => b.billNo !== billNo);
+                    localStorage.setItem('karobar_bills', JSON.stringify(localBills));
+                    alert('बिल सफलतापूर्वक मेटाइयो!');
+                    window.location.href = 'database.html';
+                } catch (err) {
+                    alert('मेटाउन सकिएन: ' + err.message);
+                }
+            }
+        };
+    </script>
+
+    <!-- UI Management & Helper Functions Script -->
+    <script>
+        function addRow() {
+            const tbody = document.getElementById('items-body');
+            const rowCount = tbody.rows.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${rowCount}</td>
+                <td><input type="text" class="table-input item-desc" placeholder="सामानको नाम" style="text-align: left; padding-left: 6px;"></td>
+                <td><input type="number" class="table-input item-qty" placeholder="" oninput="calculateTotals()"></td>
+                <td><input type="number" class="table-input item-rate" placeholder="" oninput="calculateTotals()"></td>
+                <td class="item-amount">0.00</td>
+            `;
+            tbody.appendChild(tr);
         }
 
         function calculateTotals() {
+            const rows = document.querySelectorAll('#items-body tr');
             let subTotal = 0;
-            billItemsData.forEach(item => {
-                const qty = parseFloat(item.quantity) || 0;
-                const rate = parseFloat(item.rate) || 0;
-                subTotal += qty * rate;
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                const amount = qty * rate;
+                row.querySelector('.item-amount').textContent = amount.toFixed(2);
+                subTotal += amount;
             });
 
-            const discount = parseFloat(document.getElementById('discount').value) || 0;
-            const grandTotal = Math.max(0, subTotal - discount);
-
             document.getElementById('sub-total').textContent = subTotal.toFixed(2);
+            const discount = parseFloat(document.getElementById('discount').value) || 0;
+            const grandTotal = subTotal - discount;
             document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
-        }
-
-        function saveEditedBill() {
-            const savedBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-            const index = savedBills.findIndex(b => b.id == currentBillId);
-
-            if (index !== -1) {
-                savedBills[index].customerName = document.getElementById('customer-name').value;
-                savedBills[index].date = document.getElementById('bill-date').value;
-                savedBills[index].items = billItemsData;
-                savedBills[index].discount = parseFloat(document.getElementById('discount').value) || 0;
-                
-                let subTotal = 0;
-                billItemsData.forEach(item => { subTotal += (item.quantity || 0) * (item.rate || 0); });
-                savedBills[index].grandTotal = Math.max(0, subTotal - savedBills[index].discount);
-
-                localStorage.setItem('karobar_bills', JSON.stringify(savedBills));
-                alert('बिल सफलतापूर्वक अपडेट भयो!');
-                window.location.href = 'database.html';
-            }
-        }
-
-        function deleteCurrentBill() {
-            if (confirm('के तपाईँ यो बिल मेटाउन चाहनुहुन्छ?')) {
-                let savedBills = JSON.parse(localStorage.getItem('karobar_bills')) || [];
-                savedBills = savedBills.filter(b => b.id != currentBillId);
-                localStorage.setItem('karobar_bills', JSON.stringify(savedBills));
-                alert('बिल मेटाइयो!');
-                window.location.href = 'database.html';
-            }
         }
 
         function populateHiddenReceipt() {
             document.getElementById('img-out-billno').textContent = document.getElementById('display-bill-no').textContent;
-            document.getElementById('img-out-name').textContent = document.getElementById('customer-name').value;
             document.getElementById('img-out-date').textContent = document.getElementById('bill-date').value;
-
+            document.getElementById('img-out-name').textContent = document.getElementById('customer-name').value || 'साधारण ग्राहक';
+            document.getElementById('img-out-addr').textContent = document.getElementById('customer-address').value || '-';
+            
             const tbody = document.getElementById('img-out-tbody');
             tbody.innerHTML = '';
-
-            billItemsData.forEach((item, i) => {
-                const desc = item.description || '';
-                const qty = item.quantity || 0;
-                const rate = item.rate || 0;
-                const amt = (qty * rate).toFixed(2);
-
+            document.querySelectorAll('#items-body tr').forEach((row, i) => {
+                const desc = row.querySelector('.item-desc').value || 'सामान';
+                const qty = row.querySelector('.item-qty').value || '0';
+                const rate = row.querySelector('.item-rate').value || '0';
+                const amt = row.querySelector('.item-amount').textContent || '0.00';
                 tbody.innerHTML += `
                     <tr>
                         <td style="border: 1px solid #000; padding: 4px; text-align: center;">${i+1}</td>
