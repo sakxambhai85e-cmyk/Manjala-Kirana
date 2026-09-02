@@ -64,7 +64,7 @@ margin-bottom: 5px;
 font-weight: bold;
 font-size: 13px;
 }
-.form-group input, .form-group textarea {
+.form-group input, .form-group textarea, .form-group select {
 width: 100%;
 padding: 10px;
 border: 1px solid #ccc;
@@ -148,6 +148,20 @@ line-height: 1.6;
 <textarea id="letter-body" placeholder="पत्रको मुख्य ब्यहोरा यहाँ टाईप गर्नुहोस्..."></textarea>
 </div>
 
+<div class="form-group">
+<label>छाप विकल्प (Stamp Option):</label>
+<select id="letter-stamp-option">
+<option value="real">वास्तविक आधिकारिक छाप (Real Official Seal)</option>
+<option value="custom">कस्टम अपलोड गरिएको छवि (Custom Uploaded Image)</option>
+<option value="none">छाप नराख्ने (No Stamp)</option>
+</select>
+</div>
+
+<div class="form-group" id="upload-group" style="display:none;">
+<label>स्टाम्प/हस्ताक्षर छवि अपलोड गर्नुहोस् (Upload Custom Stamp Image):</label>
+<input type="file" id="stamp-file-input" accept="image/*">
+</div>
+
 <button class="btn" onclick="downloadLetterImage()">📥 लेटरहेड फोटो डाउनलोड गर्नुहोस् (JPG)</button>
 <button class="btn btn-secondary" style="margin-top: 8px;" onclick="window.location.href='database.html'">📊 डाटाबेसमा फर्कनुहोस्</button>
 </div>
@@ -182,18 +196,41 @@ line-height: 1.6;
 <b>पद:</b> प्रोप्राइटर (Proprietor)<br>
 <b>संस्था:</b> मञ्जला किराना पसल
 </div>
-<div style="width: 120px; height: 120px; border: 2px dashed #c0392b; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; color: #c0392b; font-size: 10px; font-weight: bold; transform: rotate(-10deg); padding: 5px; background: rgba(192, 57, 43, 0.02);">
-[ यहाँ छाप लगाउनुहोस् / Stamping Area ]
-</div>
+<div id="stamp-container" style="display: flex; align-items: center; justify-content: center;"></div>
 </div>
 </div>
 
 <script>
+let customStampDataUrl = '';
+
 document.addEventListener('DOMContentLoaded', () => {
 const dateInput = document.getElementById('letter-date');
 if (dateInput) {
 dateInput.valueAsDate = new Date();
 }
+
+const stampOptionSelect = document.getElementById('letter-stamp-option');
+const uploadGroup = document.getElementById('upload-group');
+const stampFileInput = document.getElementById('stamp-file-input');
+
+stampOptionSelect.addEventListener('change', (e) => {
+if (e.target.value === 'custom') {
+uploadGroup.style.display = 'block';
+} else {
+uploadGroup.style.display = 'none';
+}
+});
+
+stampFileInput.addEventListener('change', (e) => {
+const file = e.target.files[0];
+if (file) {
+const reader = new FileReader();
+reader.onload = function(event) {
+customStampDataUrl = event.target.result;
+};
+reader.readAsDataURL(file);
+}
+});
 });
 
 function populateTemplate() {
@@ -202,18 +239,39 @@ document.getElementById('out-subject').textContent = document.getElementById('le
 document.getElementById('out-date').textContent = document.getElementById('letter-date').value;
 document.getElementById('out-body').textContent = document.getElementById('letter-body').value;
 document.getElementById('out-prop').textContent = document.getElementById('letter-prop').value;
+
+const stampOption = document.getElementById('letter-stamp-option').value;
+const stampContainer = document.getElementById('stamp-container');
+
+if (stampOption === 'real') {
+stampContainer.style.display = 'flex';
+// Authentic circular office stamp design mimicking real physical ink seals in Nepal
+stampContainer.innerHTML = `
+<div style="width: 130px; height: 130px; border: 3px solid #b91c1c; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #b91c1c; font-family: sans-serif; padding: 6px; transform: rotate(-8deg); background: rgba(185, 28, 28, 0.03); box-shadow: inset 0 0 0 1px rgba(185, 28, 28, 0.2);">
+<div style="font-size: 10px; font-weight: bold; border-bottom: 1px solid #b91c1c; width: 100%; padding-bottom: 2px; margin-bottom: 3px;">मञ्जला किराना पसल</div>
+<div style="font-size: 8.5px; font-weight: bold; line-height: 1.1; margin-bottom: 3px;">सुन्दरहरैंचा-९, मोरङ</div>
+<div style="font-size: 9px; font-weight: bold; border-top: 1px solid #b91c1c; width: 100%; padding-top: 2px;">PAN: ६२४४१६०७०</div>
+</div>`;
+} else if (stampOption === 'custom' && customStampDataUrl) {
+stampContainer.style.display = 'flex';
+stampContainer.innerHTML = `<img src="${customStampDataUrl}" style="max-width: 130px; max-height: 130px; object-fit: contain; transform: rotate(-8deg);">`;
+} else {
+stampContainer.style.display = 'none';
+stampContainer.innerHTML = '';
+}
 }
 
 function downloadLetterImage() {
 populateTemplate();
 const template = document.getElementById('hidden-letter-template');
-html2canvas(template, { scale: 2 }).then(canvas => {
+html2canvas(template, { scale: 2, useCORS: true }).then(canvas => {
 const link = document.createElement('a');
 link.download = 'manjala_official_letter.jpg';
-link.href = canvas.toDataURL('image/jpeg', 0.85);
+link.href = canvas.toDataURL('image/jpeg', 0.88);
 link.click();
 });
 }
 </script>
 </body>
-</html>
+  </html>
+  
