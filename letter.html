@@ -96,7 +96,6 @@ font-weight: bold;
 }
 .btn-secondary { background-color: #2980b9; }
 
-/* Hidden Template rendered precisely for html2canvas export */
 #hidden-letter-template {
 position: absolute;
 left: -9999px;
@@ -149,17 +148,13 @@ line-height: 1.6;
 </div>
 
 <div class="form-group">
-<label>छाप विकल्प (Stamp Option):</label>
-<select id="letter-stamp-option">
-<option value="default-img" selected>डिफल्ट आधिकारिक छाप (Uploaded Stamp Design)</option>
-<option value="custom">कस्टम अपलोड गरिएको छवि (Custom Uploaded Image)</option>
-<option value="none">छाप नराख्ने (No Stamp)</option>
+<label>प्रमाणिकरण छनौट (Verification Options):</label>
+<select id="letter-verify-option">
+<option value="both" selected>छाप र सही दुवै (Both Stamp and Signature)</option>
+<option value="signature-only">सही मात्र (Only Signature)</option>
+<option value="stamp-only">छाप मात्र (Only Stamp)</option>
+<option value="none">केही नभएको (Nothing)</option>
 </select>
-</div>
-
-<div class="form-group" id="upload-group" style="display:none;">
-<label>स्टाम्प/हस्ताक्षर छवि अपलोड गर्नुहोस् (Upload Custom Stamp Image):</label>
-<input type="file" id="stamp-file-input" accept="image/*">
 </div>
 
 <button class="btn" onclick="downloadLetterImage()">📥 लेटरहेड फोटो डाउनलोड गर्नुहोस् (JPG)</button>
@@ -188,23 +183,26 @@ line-height: 1.6;
 <div style="margin-bottom: 20px; font-size: 12px;">
 धन्यवाद।
 </div>
-<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px;">
-<div style="text-align: left; font-size: 12px;">
-भवदीय,<br><br><br>
+<div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 40px; position: relative;">
+<div style="text-align: left; font-size: 12px; position: relative; min-width: 220px;">
+भवदीय,<br><br>
+<div id="signature-container" style="min-height: 45px; margin-bottom: 5px;">
+<!-- Signature Loaded Here -->
+</div>
 <b>दस्तखत:</b> ............................................<br><br>
 <b>नाम:</b> <span id="out-prop"></span><br>
 <b>पद:</b> प्रोप्राइटर (Proprietor)<br>
 <b>संस्था:</b> मञ्जला किराना पसल
 </div>
-<div id="stamp-container" style="display: flex; align-items: center; justify-content: center;"></div>
+<div id="stamp-container" style="display: flex; align-items: center; justify-content: center; min-width: 130px; min-height: 130px;">
+<!-- Stamp Loaded Here -->
+</div>
 </div>
 </div>
 
 <script>
-let customStampDataUrl = '';
-
-// Base64 or direct data representation of your uploaded stamp graphic
-const defaultStampImageSrc = 'IMG_20260902_155828.png';
+let pngStampDataUrl = '';
+let pngSignDataUrl = '';
 
 document.addEventListener('DOMContentLoaded', () => {
 const dateInput = document.getElementById('letter-date');
@@ -212,28 +210,46 @@ if (dateInput) {
 dateInput.valueAsDate = new Date();
 }
 
-const stampOptionSelect = document.getElementById('letter-stamp-option');
-const uploadGroup = document.getElementById('upload-group');
-const stampFileInput = document.getElementById('stamp-file-input');
-
-stampOptionSelect.addEventListener('change', (e) => {
-if (e.target.value === 'custom') {
-uploadGroup.style.display = 'block';
-} else {
-uploadGroup.style.display = 'none';
-}
-});
-
-stampFileInput.addEventListener('change', (e) => {
-const file = e.target.files[0];
-if (file) {
-const reader = new FileReader();
-reader.onload = function(event) {
-customStampDataUrl = event.target.result;
+// 1. Load and process Stamp image (IMG_20260902_155828.png)
+const stampImg = new Image();
+stampImg.crossOrigin = 'anonymous';
+stampImg.onload = function() {
+const canvas = document.createElement('canvas');
+canvas.width = stampImg.width;
+canvas.height = stampImg.height;
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = '#FFFFFF';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.drawImage(stampImg, 0, 0);
+pngStampDataUrl = canvas.toDataURL('image/png');
 };
-reader.readAsDataURL(file);
+stampImg.src = 'IMG_20260902_155828.png';
+
+// 2. Load and process Signature image (IMG_2026006059.jpg) - Cleans non-PNG background automatically
+const signImg = new Image();
+signImg.crossOrigin = 'anonymous';
+signImg.onload = function() {
+const canvas = document.createElement('canvas');
+canvas.width = signImg.width;
+canvas.height = signImg.height;
+const ctx = canvas.getContext('2d');
+ctx.drawImage(signImg, 0, 0);
+
+
+// Make JPG white background transparent/blended for professional paper look
+const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+const data = imgData.data;
+for (let i = 0; i < data.length; i += 4) {
+let r = data[i], g = data[i+1], b = data[i+2];
+// If pixel is close to white (paper background from photo), make it white/transparent
+if (r > 200 && g > 200 && b > 200) {
+data[i+3] = 0; // Transparent
 }
-});
+}
+ctx.putImageData(imgData, 0, 0);
+pngSignDataUrl = canvas.toDataURL('image/png');
+};
+signImg.src = 'IMG_2026006059.jpg';
 });
 
 function populateTemplate() {
@@ -243,18 +259,24 @@ document.getElementById('out-date').textContent = document.getElementById('lette
 document.getElementById('out-body').textContent = document.getElementById('letter-body').value;
 document.getElementById('out-prop').textContent = document.getElementById('letter-prop').value;
 
-const stampOption = document.getElementById('letter-stamp-option').value;
+const verifyOption = document.getElementById('letter-verify-option').value;
 const stampContainer = document.getElementById('stamp-container');
+const signatureContainer = document.getElementById('signature-container');
 
-if (stampOption === 'default-img') {
+if ((verifyOption === 'both' || verifyOption === 'stamp-only') && pngStampDataUrl) {
 stampContainer.style.display = 'flex';
-stampContainer.innerHTML = `<img src="${defaultStampImageSrc}" style="width: 135px; height: 135px; object-fit: contain; transform: rotate(-6deg);" crossorigin="anonymous">`;
-} else if (stampOption === 'custom' && customStampDataUrl) {
-stampContainer.style.display = 'flex';
-stampContainer.innerHTML = `<img src="${customStampDataUrl}" style="max-width: 135px; max-height: 135px; object-fit: contain; transform: rotate(-6deg);">`;
+stampContainer.innerHTML = `<img src="${pngStampDataUrl}" style="width: 135px; height: 135px; object-fit: contain; transform: rotate(-6deg); mix-blend-mode: multiply;">`;
 } else {
 stampContainer.style.display = 'none';
 stampContainer.innerHTML = '';
+}
+
+if ((verifyOption === 'both' || verifyOption === 'signature-only') && pngSignDataUrl) {
+signatureContainer.style.display = 'block';
+signatureContainer.innerHTML = `<img src="${pngSignDataUrl}" style="max-height: 60px; max-width: 170px; object-fit: contain; mix-blend-mode: multiply; position: absolute; bottom: 5px; left: 0;">`;
+} else {
+signatureContainer.style.display = 'none';
+signatureContainer.innerHTML = '';
 }
 }
 
