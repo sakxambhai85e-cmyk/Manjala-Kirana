@@ -210,7 +210,7 @@ if (dateInput) {
 dateInput.valueAsDate = new Date();
 }
 
-// 1. Load and process Stamp image (IMG_20260902_155828.png)
+// 1. Load and process Stamp image (IMG_20260902_155828.jpg)
 const stampImg = new Image();
 stampImg.crossOrigin = 'anonymous';
 stampImg.onload = function() {
@@ -223,9 +223,9 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 ctx.drawImage(stampImg, 0, 0);
 pngStampDataUrl = canvas.toDataURL('image/png');
 };
-stampImg.src = 'IMG_20260902_155828.png';
+stampImg.src = 'IMG_20260902_155828.jpg';
 
-// 2. Load and process Signature image (IMG_2026006059.jpg) - Cleans non-PNG background automatically
+// 2. Load and process Signature image (IMG_20260905_114932.jpg)
 const signImg = new Image();
 signImg.crossOrigin = 'anonymous';
 signImg.onload = function() {
@@ -235,21 +235,18 @@ canvas.height = signImg.height;
 const ctx = canvas.getContext('2d');
 ctx.drawImage(signImg, 0, 0);
 
-
-// Make JPG white background transparent/blended for professional paper look
 const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 const data = imgData.data;
 for (let i = 0; i < data.length; i += 4) {
 let r = data[i], g = data[i+1], b = data[i+2];
-// If pixel is close to white (paper background from photo), make it white/transparent
 if (r > 200 && g > 200 && b > 200) {
-data[i+3] = 0; // Transparent
+data[i+3] = 0;
 }
 }
 ctx.putImageData(imgData, 0, 0);
 pngSignDataUrl = canvas.toDataURL('image/png');
 };
-signImg.src = 'IMG_2026006059.jpg';
+signImg.src = 'IMG_20260905_114932.jpg';
 });
 
 function populateTemplate() {
